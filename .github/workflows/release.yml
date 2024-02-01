@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-20.04   # For Ubuntu only
+            os-name: "Ubuntu"
+          - os: macos-latest   # For macOS only
+            os-name: "macOS"
+          - sudo: "sudo"        # For Ubuntu and macOS
+            c-compiler: "gcc"
+            cxx-compiler: "g++"
+          - os: windows-latest  # For Windows only
+            os-name: "Windows"
+            sudo: ""
+            c-compiler: "cl.exe"
+            cxx-compiler: "cl.exe"
+          - build_type: "Release" # For all platforms
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.3
+        if: matrix.os-name == 'Windows'
+
+      - name: Configure NiftyReg
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_CXX_COMPILER=${{ matrix.cxx-compiler }} \
+                -DCMAKE_C_COMPILER=${{ matrix.c-compiler }} \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -DBUILD_ALL_DEP=ON \
+                -DUSE_CUDA=OFF \
+                -DUSE_OPENCL=OFF \
+                -DUSE_SSE=ON \
+                -DUSE_OPENMP=ON \
+                -DBUILD_TESTING=OFF \
+                ..
+
+      - name: Build NiftyReg
+        shell: bash
+        run: cmake --build build --config ${{ matrix.build_type }}
+
+      - name: Prepare the package
+        if: matrix.os-name == 'Windows'
+        shell: powershell
+        working-directory: build/reg-apps/Release
+        run: |
+          Compress-Archive -Path *.exe -DestinationPath ../../NiftyReg.zip
+
+      - name: Prepare the package
+        if: matrix.os-name != 'Windows'
+        working-directory: build/reg-apps
+        run: |
+          find . -type f -executable -exec zip ../NiftyReg.zip {} \;
+
+      - name: Upload the package
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: build/NiftyReg.zip
+          asset_name: NiftyReg-${{ matrix.os-name }}-${GITHUB_REF#refs/tags/}.zip
+          asset_content_type: application/zip
