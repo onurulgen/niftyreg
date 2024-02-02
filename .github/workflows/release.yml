@@ -10,13 +10,19 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, macos-latest, windows-2019]
+        platform: [cpu, cuda]
         include:
+          - platform: cpu
+            platform-name: ""
+            use-cuda: "OFF"
+          - platform: cuda
+            platform-name: "-CUDA"
+            use-cuda: "ON"
           - os: ubuntu-20.04    # For Ubuntu only
             os-name: "Ubuntu"
-            use_cuda: "ON"
           - os: macos-latest    # For macOS only
             os-name: "macOS"
-            use_cuda: "OFF"
+            use-cuda: "OFF"
           - sudo: "sudo"        # For Ubuntu and macOS
             c-compiler: "gcc"
             cxx-compiler: "g++"
@@ -25,7 +31,6 @@ jobs:
             sudo: ""
             c-compiler: "cl.exe"
             cxx-compiler: "cl.exe"
-            use_cuda: "ON"
           - build_type: "Release" # For all platforms
 
     steps:
@@ -54,7 +59,7 @@ jobs:
                 -DCMAKE_C_COMPILER=${{ matrix.c-compiler }} \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                 -DBUILD_ALL_DEP=ON \
-                -DUSE_CUDA=${{ matrix.use_cuda }} \
+                -DUSE_CUDA=${{ matrix.use-cuda }} \
                 -DUSE_OPENCL=OFF \
                 -DUSE_SSE=ON \
                 -DUSE_OPENMP=ON \
@@ -94,4 +99,4 @@ jobs:
         with:
           repo_token: ${{ github.token }}
           file: build/NiftyReg.zip
-          asset_name: NiftyReg-${{ matrix.os-name }}-${{ steps.get_tag.outputs.tag }}.zip
+          asset_name: NiftyReg-${{ matrix.os-name }}${{ matrix.platform-name }}-${{ steps.get_tag.outputs.tag }}.zip
