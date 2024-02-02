@@ -11,9 +11,9 @@ jobs:
       matrix:
         os: [ubuntu-20.04, macos-latest, windows-latest]
         include:
-          - os: ubuntu-20.04   # For Ubuntu only
+          - os: ubuntu-20.04    # For Ubuntu only
             os-name: "Ubuntu"
-          - os: macos-latest   # For macOS only
+          - os: macos-latest    # For macOS only
             os-name: "macOS"
           - sudo: "sudo"        # For Ubuntu and macOS
             c-compiler: "gcc"
@@ -81,4 +81,4 @@ jobs:
         with:
           repo_token: ${{ github.token }}
           file: build/NiftyReg.zip
-          asset_name: NiftyReg-${{ matrix.os-name }}-${{ steps.get_tag.outputs.tag }}-${tag}.zip
+          asset_name: NiftyReg-${{ matrix.os-name }}-${{ steps.get_tag.outputs.tag }}.zip
