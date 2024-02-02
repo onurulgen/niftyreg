@@ -40,8 +40,10 @@ jobs:
         id: cuda-toolkit
         if: matrix.os-name != 'macOS'
         with:
-          cuda: '12.3.2'
-          method: 'network'
+          cuda: '11.8.0'
+          method: network
+          use-github-cache: false
+          use-local-cache: false
 
       - name: Configure NiftyReg
         shell: bash
