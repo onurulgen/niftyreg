@@ -32,6 +32,12 @@ jobs:
         uses: microsoft/setup-msbuild@v1.3
         if: matrix.os-name == 'Windows'
 
+      - name: Install CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.14
+        id: cuda-toolkit
+        with:
+          cuda: '12.3.2'
+
       - name: Configure NiftyReg
         shell: bash
         run: |
@@ -41,7 +47,7 @@ jobs:
                 -DCMAKE_C_COMPILER=${{ matrix.c-compiler }} \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                 -DBUILD_ALL_DEP=ON \
-                -DUSE_CUDA=OFF \
+                -DUSE_CUDA=ON \
                 -DUSE_OPENCL=OFF \
                 -DUSE_SSE=ON \
                 -DUSE_OPENMP=ON \
