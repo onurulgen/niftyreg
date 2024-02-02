@@ -22,7 +22,6 @@ jobs:
             os-name: "Ubuntu"
           - os: macos-latest    # For macOS only
             os-name: "macOS"
-            use-cuda: "OFF"
           - sudo: "sudo"        # For Ubuntu and macOS
             c-compiler: "gcc"
             cxx-compiler: "g++"
@@ -32,6 +31,9 @@ jobs:
             c-compiler: "cl.exe"
             cxx-compiler: "cl.exe"
           - build_type: "Release" # For all platforms
+        exclude:
+          - os: macos-latest
+            platform: cuda
 
     steps:
       - uses: actions/checkout@v3
@@ -43,7 +45,7 @@ jobs:
       - name: Install CUDA Toolkit
         uses: Jimver/cuda-toolkit@v0.2.14
         id: cuda-toolkit
-        if: matrix.os-name != 'macOS'
+        if: matrix.platform == 'cuda'
         with:
           cuda: '11.8.0'
           method: network
@@ -90,7 +92,7 @@ jobs:
           find . -maxdepth 1 -type f -perm +111 -exec zip ../NiftyReg.zip {} \;
 
       - name: Get the tag name
-        id: get_tag
+        id: tag
         shell: bash
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
@@ -99,4 +101,4 @@ jobs:
         with:
           repo_token: ${{ github.token }}
           file: build/NiftyReg.zip
-          asset_name: NiftyReg-${{ matrix.os-name }}${{ matrix.platform-name }}-${{ steps.get_tag.outputs.tag }}.zip
+          asset_name: NiftyReg-${{ matrix.os-name }}${{ matrix.platform-name }}-${{ steps.tag.outputs.tag }}.zip
