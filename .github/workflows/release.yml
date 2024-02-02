@@ -72,33 +72,39 @@ jobs:
         shell: bash
         run: cmake --build build --config ${{ matrix.build_type }}
 
+      - name: Prepare the variables
+        id: vars
+        shell: bash
+        run: echo "output-folder=NiftyReg-${{ matrix.os-name }}${{ matrix.platform-name }}-${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
       - name: Prepare the package
         if: matrix.os-name == 'Windows'
         shell: powershell
         working-directory: build/reg-apps/Release
         run: |
-          Compress-Archive -Path *.exe -DestinationPath ../../NiftyReg.zip
+          New-Item -ItemType Directory -Force -Path ${{ steps.vars.outputs.output-folder }}
+          Move-Item -Path *.exe -Destination ${{ steps.vars.outputs.output-folder }}
+          Compress-Archive -Path ${{ steps.vars.outputs.output-folder }} -DestinationPath ../../NiftyReg.zip
 
       - name: Prepare the package
         if: matrix.os-name == 'Ubuntu'
         working-directory: build/reg-apps
         run: |
-          find . -maxdepth 1 -type f -executable -exec zip ../NiftyReg.zip {} \;
+          mkdir -p ${{ steps.vars.outputs.output-folder }}
+          find . -maxdepth 1 -type f -executable -exec cp {} ${{ steps.vars.outputs.output-folder }} \;
+          zip -r ../NiftyReg.zip ${{ steps.vars.outputs.output-folder }}
 
       - name: Prepare the package
         if: matrix.os-name == 'macOS'
         working-directory: build/reg-apps
         run: |
-          find . -maxdepth 1 -type f -perm +111 -exec zip ../NiftyReg.zip {} \;
-
-      - name: Get the tag name
-        id: tag
-        shell: bash
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          mkdir -p ${{ steps.vars.outputs.output-folder }}
+          find . -maxdepth 1 -type f -perm +111 -exec cp {} ${{ steps.vars.outputs.output-folder }} \;
+          zip -r ../NiftyReg.zip ${{ steps.vars.outputs.output-folder }}
 
       - name: Upload the package
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ github.token }}
           file: build/NiftyReg.zip
-          asset_name: NiftyReg-${{ matrix.os-name }}${{ matrix.platform-name }}-${{ steps.tag.outputs.tag }}.zip
+          asset_name: ${{ steps.vars.outputs.output-folder }}.zip
