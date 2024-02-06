@@ -57,10 +57,11 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_CXX_COMPILER=${{ matrix.cxx-compiler }} \
-                -DCMAKE_C_COMPILER=${{ matrix.c-compiler }} \
+          cmake -DCMAKE_C_COMPILER=${{ matrix.c-compiler }} \
+                -DCMAKE_CXX_COMPILER=${{ matrix.cxx-compiler }} \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                 -DBUILD_ALL_DEP=ON \
+                -DCHECK_GPU=OFF \
                 -DUSE_CUDA=${{ matrix.use-cuda }} \
                 -DUSE_OPENCL=OFF \
                 -DUSE_SSE=ON \
@@ -91,7 +92,7 @@ jobs:
         working-directory: build/reg-apps
         run: |
           mkdir -p ${{ steps.vars.outputs.output-folder }}
-          find . -maxdepth 1 -type f -executable -exec cp {} ${{ steps.vars.outputs.output-folder }} \;
+          find . -maxdepth 1 -type f -executable -exec mv {} ${{ steps.vars.outputs.output-folder }} \;
           zip -r ../NiftyReg.zip ${{ steps.vars.outputs.output-folder }}
 
       - name: Prepare the package
@@ -99,7 +100,7 @@ jobs:
         working-directory: build/reg-apps
         run: |
           mkdir -p ${{ steps.vars.outputs.output-folder }}
-          find . -maxdepth 1 -type f -perm +111 -exec cp {} ${{ steps.vars.outputs.output-folder }} \;
+          find . -maxdepth 1 -type f -perm +111 -exec mv {} ${{ steps.vars.outputs.output-folder }} \;
           zip -r ../NiftyReg.zip ${{ steps.vars.outputs.output-folder }}
 
       - name: Upload the package
