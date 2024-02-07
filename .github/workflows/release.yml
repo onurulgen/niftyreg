@@ -15,13 +15,16 @@ jobs:
           - platform: cpu
             platform-name: ""
             use-cuda: "OFF"
+            use-opencl: "OFF"
           - platform: cuda
             platform-name: "-CUDA"
             use-cuda: "ON"
+            use-opencl: "ON"
           - os: ubuntu-20.04    # For Ubuntu only
             os-name: "Ubuntu"
           - os: macos-latest    # For macOS only
             os-name: "macOS"
+            use-opencl: "ON"
           - sudo: "sudo"        # For Ubuntu and macOS
             c-compiler: "gcc"
             cxx-compiler: "g++"
@@ -63,7 +66,7 @@ jobs:
                 -DBUILD_ALL_DEP=ON \
                 -DCHECK_GPU=OFF \
                 -DUSE_CUDA=${{ matrix.use-cuda }} \
-                -DUSE_OPENCL=ON \
+                -DUSE_OPENCL=${{ matrix.use-opencl }} \
                 -DUSE_SSE=ON \
                 -DUSE_OPENMP=ON \
                 -DBUILD_TESTING=OFF \
