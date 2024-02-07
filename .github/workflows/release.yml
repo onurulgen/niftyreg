@@ -63,7 +63,7 @@ jobs:
                 -DBUILD_ALL_DEP=ON \
                 -DCHECK_GPU=OFF \
                 -DUSE_CUDA=${{ matrix.use-cuda }} \
-                -DUSE_OPENCL=OFF \
+                -DUSE_OPENCL=ON \
                 -DUSE_SSE=ON \
                 -DUSE_OPENMP=ON \
                 -DBUILD_TESTING=OFF \

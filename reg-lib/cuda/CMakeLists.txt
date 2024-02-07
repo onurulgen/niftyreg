@@ -11,7 +11,7 @@ if(CHECK_GPU)
         message("The USE_CUDA flag has been turned OFF.")
         set(USE_CUDA OFF CACHE BOOL "To use the CUDA platform" FORCE)
         return()
-        # Check if the executable return failure
+    # Check if the executable return failure
     elseif(RUN_RESULT_VAR)
         message(WARNING "No CUDA-enabled card has been detected")
         message("Result code: ${RUN_RESULT_VAR}")
