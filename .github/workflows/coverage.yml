@@ -6,6 +6,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # - name: Install CUDA Toolkit
+      #   uses: Jimver/cuda-toolkit@v0.2.14
+      #   with:
+      #     cuda: '11.8.0'
+      #     method: network
+      #     use-github-cache: false
+      #     use-local-cache: false
+
+      - name: Install Dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake gcc g++ git
+
       - name: Install Catch2
         run:  |
           git clone https://github.com/catchorg/Catch2.git
