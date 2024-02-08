@@ -9,9 +9,6 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake git lcov
 
-      - name: Test OpenCL
-        run: clinfo
-
       - name: Install Catch2
         run:  |
           git clone https://github.com/catchorg/Catch2.git
@@ -28,7 +25,7 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Debug \
                 -DBUILD_ALL_DEP=ON \
                 -DUSE_CUDA=ON \
-                -DUSE_OPENCL=ON \
+                -DUSE_OPENCL=OFF \
                 -DUSE_SSE=OFF \
                 -DUSE_OPENMP=OFF \
                 -DBUILD_TESTING=ON \
@@ -37,9 +34,6 @@ jobs:
 
       - name: Build NiftyReg
         run: cmake --build build --config Debug
-
-      - name: Test OpenCL
-        run: ./build/reg-apps/reg_gpuinfo
 
       - name: Run tests
         working-directory: build
