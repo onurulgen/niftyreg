@@ -15,7 +15,7 @@ jobs:
       #     use-local-cache: false
 
       - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake gcc g++ git
+        run: sudo apt-get update && sudo apt-get install -y cmake gcc g++ git lcov
 
       - name: Install Catch2
         run:  |
@@ -23,9 +23,6 @@ jobs:
           cd Catch2
           cmake -Bbuild -H. -DBUILD_TESTING=OFF
           sudo cmake --build build/ --target install --config Debug
-
-      - name: Install lcov
-        run: sudo apt-get install lcov
 
       - name: Configure NiftyReg
         run: |
