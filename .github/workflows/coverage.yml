@@ -6,11 +6,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install CMake
-        uses: lukka/get-cmake@latest
-
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y gcc g++ git lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
 
       - name: Install Catch2
         run:  |
