@@ -10,7 +10,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clinfo cmake git lcov
 
       - name: Test OpenCL
-        run: sudo clinfo
+        run: |
+          sudo mkdir -p /etc/OpenCL/vendors && sudo echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
+          clinfo
 
       - name: Install Catch2
         run:  |
