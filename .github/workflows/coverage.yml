@@ -17,9 +17,6 @@ jobs:
       - name: Install CMake
         uses: lukka/get-cmake@latest
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y gcc g++ git lcov
-
       - name: Install Catch2
         run:  |
           git clone https://github.com/catchorg/Catch2.git
@@ -35,8 +32,8 @@ jobs:
                 -DCMAKE_CXX_COMPILER=g++ \
                 -DCMAKE_BUILD_TYPE=Debug \
                 -DBUILD_ALL_DEP=ON \
-                -DUSE_CUDA=ON \
-                -DUSE_OPENCL=ON \
+                -DUSE_CUDA=OFF \
+                -DUSE_OPENCL=OFF \
                 -DUSE_SSE=ON \
                 -DUSE_OPENMP=ON \
                 -DBUILD_TESTING=ON \
