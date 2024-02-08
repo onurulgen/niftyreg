@@ -6,19 +6,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install CUDA Toolkit
-        uses: Jimver/cuda-toolkit@v0.2.14
-        with:
-          cuda: '11.8.0'
-          method: network
-          use-github-cache: false
-          use-local-cache: false
-
       - name: Install CMake
         uses: lukka/get-cmake@latest
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y gcc g++ git lcov
+        run: sudo apt-get update && sudo apt-get install -y gcc g++ git lcov lsb-release
+
+      - name: Install CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.14
+        with:
+          method: network
+          use-github-cache: false
+          use-local-cache: false
 
       - name: Install Catch2
         run:  |
