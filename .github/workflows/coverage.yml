@@ -6,11 +6,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y clinfo cmake git lcov
+
       - name: Test OpenCL
         run: sudo clinfo
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake git lcov
 
       - name: Install Catch2
         run:  |
