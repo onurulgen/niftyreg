@@ -6,6 +6,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Test OpenCL
+        run: sudo clinfo
+
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake git lcov
 
@@ -34,6 +37,9 @@ jobs:
 
       - name: Build NiftyReg
         run: cmake --build build --config Debug
+
+      - name: Test OpenCL
+        run: ./build/reg-apps/reg_gpuinfo
 
       - name: Run tests
         working-directory: build
