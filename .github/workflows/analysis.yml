@@ -34,6 +34,7 @@ jobs:
                 -DUSE_OPENMP=ON \
                 -DBUILD_TESTING=OFF \
                 -DWITH_COVERAGE=OFF \
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
                 ..
 
       - name: Code Analysis
