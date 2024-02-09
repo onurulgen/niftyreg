@@ -6,6 +6,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install cppcheck -y
+
     #   - name: Install CUDA Toolkit
     #     uses: Jimver/cuda-toolkit@v0.2.14
     #     with:
@@ -13,22 +17,27 @@ jobs:
     #       use-github-cache: false
     #       use-local-cache: false
 
+      - name: Configure NiftyReg
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_C_COMPILER=gcc \
+                -DCMAKE_CXX_COMPILER=g++ \
+                -DCMAKE_BUILD_TYPE=Debug \
+                -DBUILD_ALL_DEP=ON \
+                -DCHECK_GPU=OFF \
+                -DUSE_CUDA=OFF \
+                -DUSE_OPENCL=OFF \
+                -DUSE_SSE=ON \
+                -DUSE_OPENMP=ON \
+                -DBUILD_TESTING=OFF \
+                -DWITH_COVERAGE=OFF \
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+                ..
+
       - name: Code Analysis
         uses: JacobDomagala/StaticAnalysis@master
         with:
             comment_title: Code Analysis Results
-            cppcheck_args: --enable=warning
+            cppcheck_args: --enable=warning --project=build/compile_commands.json -j 4
             report_pr_changes_only: false
-            use_cmake: true
-            cmake_args: -DCMAKE_C_COMPILER=gcc \
-                        -DCMAKE_CXX_COMPILER=g++ \
-                        -DCMAKE_BUILD_TYPE=Debug \
-                        -DBUILD_ALL_DEP=ON \
-                        -DCHECK_GPU=OFF \
-                        -DUSE_CUDA=OFF \
-                        -DUSE_OPENCL=OFF \
-                        -DUSE_SSE=ON \
-                        -DUSE_OPENMP=ON \
-                        -DBUILD_TESTING=OFF \
-                        -DWITH_COVERAGE=OFF \
-                        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            use_cmake: false
