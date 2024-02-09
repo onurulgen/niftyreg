@@ -6,6 +6,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install cppcheck -y
+          pip3 install --upgrade setuptools urllib3 chardet pyOpenSSL pygithub
+
     #   - name: Install CUDA Toolkit
     #     uses: Jimver/cuda-toolkit@v0.2.14
     #     with:
@@ -13,19 +18,30 @@ jobs:
     #       use-github-cache: false
     #       use-local-cache: false
 
+      - name: Configure NiftyReg
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_C_COMPILER=gcc \
+                -DCMAKE_CXX_COMPILER=g++ \
+                -DCMAKE_BUILD_TYPE=Debug \
+                -DBUILD_ALL_DEP=ON \
+                -DCHECK_GPU=OFF \
+                -DUSE_CUDA=OFF \
+                -DUSE_OPENCL=OFF \
+                -DUSE_SSE=ON \
+                -DUSE_OPENMP=ON \
+                -DBUILD_TESTING=OFF \
+                -DWITH_COVERAGE=OFF \
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+                ..
+
       - name: Code Analysis
-        uses: JacobDomagala/StaticAnalysis@master
-        with:
-            comment_title: Code Analysis Results
-            cppcheck_args: -j4 --enable=warning
-            report_pr_changes_only: false
-            use_cmake: true
-            cmake_args: -DCMAKE_BUILD_TYPE=Debug \
-                        -DBUILD_ALL_DEP=ON \
-                        -DCHECK_GPU=OFF \
-                        -DUSE_CUDA=OFF \
-                        -DUSE_OPENCL=OFF \
-                        -DUSE_SSE=ON \
-                        -DUSE_OPENMP=ON \
-                        -DBUILD_TESTING=OFF \
-                        -DWITH_COVERAGE=OFF
+        env:
+            COMMENT_TITLE: Code Analysis Results
+            PR_NUMBER: ${{ github.event.pull_request.number }}
+            REPORT_PR_CHANGES_ONLY: false
+            GITHUB_TOKEN: ${{ github.token }}
+        run: |
+            cppcheck -j 4 --enable=warning,style,performance,portability --project=build/compile_commands.json --output-file=analysis.txt
+            python3 ${{ github.workspace }}/.github/code_analysis.py -cc analysis.txt
