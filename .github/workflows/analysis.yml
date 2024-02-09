@@ -9,7 +9,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install cppcheck -y
-          pip3 install --upgrade setuptools
+          pip3 install --upgrade setuptools urllib3 chardet pyOpenSSL cryptography
           pip3 install pygithub
 
       - name: Install CUDA Toolkit
