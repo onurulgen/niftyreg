@@ -63,7 +63,7 @@ def parse_diff_output(changed_files):
     file_pattern = re.compile(r"^\+\+\+ b/(.*?)$", re.MULTILINE)
     line_pattern = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", re.MULTILINE)
 
-    supported_extensions = (".h", ".hpp", ".hcc", ".c", ".cc", ".cpp", ".cxx", ".cu")
+    supported_extensions = (".h", ".hpp", ".hcc", ".c", ".cc", ".cpp", ".cxx", ".cu", ".cl")
 
     files = {}
     for match in file_pattern.finditer(changed_files):
