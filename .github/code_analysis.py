@@ -443,7 +443,7 @@ def create_comment_for_output(tool_output, files_changed_in_pr, output_to_consol
     was_note = False
 
     for line in tool_output:
-        if not is_excluded_dir(line):
+        if not line[0].isspace() and not is_excluded_dir(line):
             (
                 file_path,
                 is_note,
