@@ -47,7 +47,6 @@ jobs:
             cppcheck_params="--enable=warning --suppress=internalError"
             cppcheck -j4 $cppcheck_params --project=build/compile_commands.json --output-file=analysis.txt
             # Since cppcheck does not support OpenCL and CUDA, we need to check these files separately
-            find reg-lib/cl/. -name "*.cl" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> analysis.txt; done
-            find reg-lib/cuda/. -name "*.cu" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> analysis.txt; done
-            cat analysis.txt
+            find $(pwd)/reg-lib/cl/. -name "*.cl" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> analysis.txt; done
+            find $(pwd)/reg-lib/cuda/. -name "*.cu" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> analysis.txt; done
             python3 ${{ github.workspace }}/.github/code_analysis.py -cc analysis.txt -o false -fk false
