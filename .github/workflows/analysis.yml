@@ -39,9 +39,10 @@ jobs:
       - name: Code Analysis
         env:
             COMMENT_TITLE: Code Analysis Results
-            PR_NUMBER: ${{ github.event.pull_request.number }}
-            REPORT_PR_CHANGES_ONLY: false
             GITHUB_TOKEN: ${{ github.token }}
+            PR_NUMBER: ${{ github.event.pull_request.number }}
+            REPO: ${{ github.repository }}
+            REPORT_PR_CHANGES_ONLY: false
         run: |
             cppcheck -j4 --enable=warning --project=build/compile_commands.json --output-file=analysis.txt
             python3 ${{ github.workspace }}/.github/code_analysis.py -cc analysis.txt -o false -fk false
