@@ -6,15 +6,15 @@ import sys
 from github import Github
 
 # Input variables from Github action
-GITHUB_TOKEN = os.getenv("INPUT_GITHUB_TOKEN")
-PR_NUM = os.getenv("INPUT_PR_NUM", "-1")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+PR_NUM = os.getenv("PR_NUM", "-1")
 WORK_DIR = f'{os.getenv("GITHUB_WORKSPACE")}'
-REPO_NAME = os.getenv("INPUT_REPO")
-TARGET_REPO_NAME = os.getenv("INPUT_REPO", "")
+REPO_NAME = os.getenv("REPO")
+TARGET_REPO_NAME = os.getenv("REPO", "")
 SHA = os.getenv("GITHUB_SHA")
-COMMENT_TITLE = os.getenv("INPUT_COMMENT_TITLE", "Static Analysis")
-ONLY_PR_CHANGES = os.getenv("INPUT_REPORT_PR_CHANGES_ONLY", "False").lower()
-VERBOSE = os.getenv("INPUT_VERBOSE", "False").lower() == "true"
+COMMENT_TITLE = os.getenv("COMMENT_TITLE", "Static Analysis")
+ONLY_PR_CHANGES = os.getenv("REPORT_PR_CHANGES_ONLY", "False").lower()
+VERBOSE = os.getenv("VERBOSE", "False").lower() == "true"
 FILES_WITH_ISSUES = {}
 
 # Max characters per comment - 65536
@@ -203,7 +203,7 @@ def is_excluded_dir(line):
     """
 
     # In future this could be multiple different directories
-    exclude_dir = os.getenv("INPUT_EXCLUDE_DIR")
+    exclude_dir = os.getenv("EXCLUDE_DIR")
     if not exclude_dir:
         return False
 
@@ -516,7 +516,7 @@ def read_files_and_parse_results():
 
     if parser.parse_args().fork_repository == "true":
         # Make sure to use Head repository
-        REPO_NAME = os.getenv("INPUT_PR_REPO")
+        REPO_NAME = os.getenv("PR_REPO")
 
     cppcheck_file_name = parser.parse_args().cppcheck
     output_to_console = parser.parse_args().output_to_console == "true"
