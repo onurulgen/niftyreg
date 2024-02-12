@@ -44,4 +44,4 @@ jobs:
             GITHUB_TOKEN: ${{ github.token }}
         run: |
             cppcheck -j4 --enable=warning --project=build/compile_commands.json --output-file=analysis.txt
-            python3 ${{ github.workspace }}/.github/code_analysis.py -cc analysis.txt
+            python3 ${{ github.workspace }}/.github/code_analysis.py -cc analysis.txt -o false -fk false

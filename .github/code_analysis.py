@@ -19,7 +19,7 @@ FILES_WITH_ISSUES = {}
 
 # Max characters per comment - 65536
 # Make some room for HTML tags and error message
-MAX_CHAR_COUNT_REACHED = "!Maximum character count per GitHub comment has been reached!" " Not all warnings/errors has been parsed!"
+MAX_CHAR_COUNT_REACHED = "!Maximum character count per GitHub comment has been reached! Not all warnings/errors has been parsed!"
 COMMENT_MAX_SIZE = 65000
 CURRENT_COMMENT_LENGTH = 0
 
