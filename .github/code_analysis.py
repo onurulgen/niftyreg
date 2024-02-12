@@ -474,6 +474,7 @@ def create_comment_for_output(tool_output, prefix, files_changed_in_pr, output_t
                 was_note = is_note
                 new_line = generate_output(is_note, file_path, file_line_start, file_line_end, description)
 
+                global CURRENT_COMMENT_LENGTH
                 if check_for_char_limit(new_line):
                     per_issue_string = append_issue(is_note, per_issue_string, new_line, list_of_issues)
                     CURRENT_COMMENT_LENGTH += len(new_line)
