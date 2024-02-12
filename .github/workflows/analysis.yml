@@ -17,12 +17,12 @@ jobs:
       - name: Install Python dependencies
         run: pip3 install --upgrade setuptools urllib3 chardet pyOpenSSL pygithub
 
-      - name: Install CUDA Toolkit
-        uses: Jimver/cuda-toolkit@v0.2.14
-        with:
-          method: network
-          use-github-cache: false
-          use-local-cache: false
+      # - name: Install CUDA Toolkit
+      #   uses: Jimver/cuda-toolkit@v0.2.14
+      #   with:
+      #     method: network
+      #     use-github-cache: false
+      #     use-local-cache: false
 
       - name: Configure NiftyReg
         run: |
@@ -33,8 +33,8 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Debug \
                 -DBUILD_ALL_DEP=ON \
                 -DCHECK_GPU=OFF \
-                -DUSE_CUDA=ON \
-                -DUSE_OPENCL=ON \
+                -DUSE_CUDA=OFF \
+                -DUSE_OPENCL=OFF \
                 -DUSE_SSE=ON \
                 -DUSE_OPENMP=ON \
                 -DBUILD_TESTING=OFF \
