@@ -8,7 +8,7 @@ from github import Github
 # Input variables from Github action
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 PR_NUM = os.getenv("PR_NUMBER", "-1")
-WORK_DIR = os.getenv("WORK_DIR", os.getenv("GITHUB_WORKSPACE"))
+WORK_DIR = os.getenv("GITHUB_WORKSPACE")
 REPO_NAME = os.getenv("REPO")
 TARGET_REPO_NAME = os.getenv("REPO", "")
 SHA = os.getenv("GITHUB_SHA")
@@ -207,10 +207,9 @@ def is_excluded_dir(line):
     if not exclude_dir:
         return False
 
-    excluded_dir = f"{WORK_DIR}/{exclude_dir}"
-    debug_print(f"{line} and {excluded_dir} with result {line.startswith(excluded_dir)}")
+    debug_print(f"{line} and {exclude_dir} with result {line.startswith(exclude_dir)}")
 
-    return line.startswith(excluded_dir)
+    return line.startswith(exclude_dir)
 
 
 def get_file_line_end(file_in, file_line_start_in):
@@ -528,7 +527,7 @@ def read_files_and_parse_results():
     common_ancestor = parser.parse_args().common
     feature_branch = parser.parse_args().head
 
-    line_prefix = f"{WORK_DIR}"
+    line_prefix = ""
 
     debug_print(f"cppcheck result: \n {cppcheck_content} \n" f"line_prefix: {line_prefix} \n")
 

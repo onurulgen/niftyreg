@@ -49,7 +49,6 @@ jobs:
             PR_NUMBER: ${{ github.event.pull_request.number }}
             REPO: ${{ github.repository }}
             REPORT_PR_CHANGES_ONLY: false
-            WORK_DIR: ""
         run: |
             analysis_file="analysis.txt"
             cppcheck_params="--enable=warning --check-level=exhaustive --suppress=internalError --suppress=internalAstError"
