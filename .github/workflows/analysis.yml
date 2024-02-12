@@ -44,5 +44,8 @@ jobs:
             REPO: ${{ github.repository }}
             REPORT_PR_CHANGES_ONLY: false
         run: |
-            cppcheck -j4 --enable=warning --project=build/compile_commands.json --output-file=analysis.txt
+            cppcheck_params="--enable=warning --suppress=internalError"
+            cppcheck -j4 $cppcheck_params --project=build/compile_commands.json --output-file=analysis.txt
+            find reg-lib/cl/. -name "*.cl" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> analysis.txt; done
+            find reg-lib/cuda/. -name "*.cu" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> analysis.txt; done
             python3 ${{ github.workspace }}/.github/code_analysis.py -cc analysis.txt -o false -fk false
