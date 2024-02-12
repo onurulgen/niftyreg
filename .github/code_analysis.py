@@ -8,7 +8,7 @@ from github import Github
 # Input variables from Github action
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 PR_NUM = os.getenv("PR_NUMBER", "-1")
-WORK_DIR = f'{os.getenv("GITHUB_WORKSPACE")}'
+WORK_DIR = os.getenv("WORK_DIR", os.getenv("GITHUB_WORKSPACE"))
 REPO_NAME = os.getenv("REPO")
 TARGET_REPO_NAME = os.getenv("REPO", "")
 SHA = os.getenv("GITHUB_SHA")
