@@ -8,7 +8,7 @@ from github import Github
 # Input variables from Github action
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 PR_NUM = os.getenv("PR_NUMBER", "-1")
-WORK_DIR = os.getenv("GITHUB_WORKSPACE")
+WORK_DIR = f'{os.getenv("GITHUB_WORKSPACE")}'
 REPO_NAME = os.getenv("REPO")
 TARGET_REPO_NAME = os.getenv("REPO", "")
 SHA = os.getenv("GITHUB_SHA")
@@ -207,9 +207,10 @@ def is_excluded_dir(line):
     if not exclude_dir:
         return False
 
-    debug_print(f"{line} and {exclude_dir} with result {line.startswith(exclude_dir)}")
+    excluded_dir = f"{WORK_DIR}/{exclude_dir}"
+    debug_print(f"{line} and {excluded_dir} with result {line.startswith(excluded_dir)}")
 
-    return line.startswith(exclude_dir)
+    return line.startswith(excluded_dir)
 
 
 def get_file_line_end(file_in, file_line_start_in):
@@ -354,12 +355,13 @@ def generate_output(is_note, file_path, file_line_start, file_line_end, descript
     return new_line
 
 
-def extract_info(line):
+def extract_info(line, prefix):
     """
     Extracts information from a given line containing file path, line number, and issue description.
 
     Args:
     - line (str): The input string containing file path, line number, and issue description.
+    - prefix (str): The prefix to remove from the start of the file path in the line.
     - was_note (bool): Indicates if the previous issue was a note.
     - output_string (str): The string containing previous output information.
 
@@ -371,6 +373,9 @@ def extract_info(line):
         - file_line_start (int): The starting line number of the issue.
         - file_line_end (int): The ending line number of the issue.
     """
+
+    # Clean up line
+    line = line.replace(prefix, "").lstrip("/")
 
     # Get the line starting position /path/to/file:line and trim it
     file_path_end_idx = line.index(":")
@@ -425,12 +430,13 @@ def append_issue(is_note, per_issue_string, new_line, list_of_issues):
     return per_issue_string
 
 
-def create_comment_for_output(tool_output, files_changed_in_pr, output_to_console):
+def create_comment_for_output(tool_output, prefix, files_changed_in_pr, output_to_console):
     """
     Generates a comment for a GitHub pull request based on the tool output.
 
     Parameters:
         tool_output (str): The tool output to parse.
+        prefix (str): The prefix to look for in order to identify issues.
         files_changed_in_pr (dict): A dictionary containing the files that were
             changed in the pull request and the lines that were modified.
         output_to_console (bool): Whether or not to output the results to the console.
@@ -443,14 +449,14 @@ def create_comment_for_output(tool_output, files_changed_in_pr, output_to_consol
     was_note = False
 
     for line in tool_output:
-        if not line[0].isspace() and not is_excluded_dir(line):
+        if line.startswith(prefix) and not is_excluded_dir(line):
             (
                 file_path,
                 is_note,
                 file_line_start,
                 file_line_end,
                 issue_description,
-            ) = extract_info(line)
+            ) = extract_info(line, prefix)
 
             # In case where we only output to console, skip the next part
             if output_to_console:
@@ -523,14 +529,16 @@ def read_files_and_parse_results():
     common_ancestor = parser.parse_args().common
     feature_branch = parser.parse_args().head
 
-    debug_print(f"cppcheck result: \n {cppcheck_content} \n")
+    line_prefix = f"{WORK_DIR}"
+
+    debug_print(f"cppcheck result: \n {cppcheck_content} \n" f"line_prefix: {line_prefix} \n")
 
     files_changed_in_pr = {}
     if not output_to_console and (ONLY_PR_CHANGES == "true"):
         files_changed_in_pr = get_changed_files(common_ancestor, feature_branch)
 
     cppcheck_comment, cppcheck_issues_found = create_comment_for_output(
-        cppcheck_content, files_changed_in_pr, output_to_console
+        cppcheck_content, line_prefix, files_changed_in_pr, output_to_console
     )
 
     if output_to_console and cppcheck_issues_found:
