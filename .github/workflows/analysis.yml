@@ -1,5 +1,5 @@
 name: Code Analysis
-on: [pull_request]
+on: [push, pull_request]
 jobs:
   Code-Analysis:
     runs-on: ubuntu-20.04
@@ -51,6 +51,7 @@ jobs:
             PR_NUMBER: ${{ github.event.pull_request.number }}
             REPO: ${{ github.repository }}
             REPORT_PR_CHANGES_ONLY: false
+            IS_PUSH: ${{ github.event_name == 'push' }}
         run: |
             analysis_file="analysis.txt"
             cppcheck_params="--enable=warning --check-level=exhaustive --suppress=internalError --suppress=internalAstError"
@@ -58,5 +59,4 @@ jobs:
             # Since cppcheck does not support OpenCL and CUDA, we need to check these files separately
             find $(pwd)/reg-lib/cl/. -name "*.cl" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> $analysis_file; done
             find $(pwd)/reg-lib/cuda/. -name "*.cu" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> $analysis_file; done
-            cat $analysis_file
-            python3 ${{ github.workspace }}/.github/code_analysis.py -cc $analysis_file -o false -fk false
+            python3 ${{ github.workspace }}/.github/code_analysis.py -cc $analysis_file -o $IS_PUSH -fk false
