@@ -13,12 +13,9 @@
  *
  */
 
-#ifndef _REG_FEMTRANS_H
-#define _REG_FEMTRANS_H
+#pragma once
 
-#include "nifti1_io.h"
-#include <fstream>
-#include "_reg_maths.h"
+#include "_reg_tools.h"
 
 /** @brief Initialise multiples arrays to populate a dense deformation
  * field from a FEM parametrisation
@@ -33,12 +30,11 @@
  * the weight associated with the closest node.
  */
 void reg_fem_InitialiseTransformation(int *elementNodes,
-                                      unsigned int elementNumber,
+                                      unsigned elementNumber,
                                       float *nodePositions,
                                       nifti_image *deformationFieldImage,
-                                      unsigned int *closestNodes,
-                                      float *femInterpolationWeight
-                                     );
+                                      unsigned *closestNodes,
+                                      float *femInterpolationWeight);
 
 /** @brief A dense deformation field is filled using interpolation
  * from a coarse mesh
@@ -52,9 +48,8 @@ void reg_fem_InitialiseTransformation(int *elementNodes,
  */
 void reg_fem_getDeformationField(float *nodePositions,
                                  nifti_image *deformationFieldImage,
-                                 unsigned int *closestNodes,
-                                 float *femInterpolationWeight
-                                );
+                                 unsigned *closestNodes,
+                                 float *femInterpolationWeight);
 
 /** @brief Convert a dense gradient image into a mesh based gradient image
  * @param voxelBasedGradient Image that contains the gradient image
@@ -67,8 +62,7 @@ void reg_fem_getDeformationField(float *nodePositions,
  * every node.
  */
 void reg_fem_voxelToNodeGradient(nifti_image *voxelBasedGradient,
-                                 unsigned int *closestNodes,
+                                 unsigned *closestNodes,
                                  float *femInterpolationWeight,
-                                 unsigned int nodeNumber,
+                                 unsigned nodeNumber,
                                  float *femBasedGradient);
-#endif

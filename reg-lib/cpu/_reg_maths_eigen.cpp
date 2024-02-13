@@ -2,7 +2,7 @@
 
 #include "_reg_maths_eigen.h"
 #include "_reg_maths.h"
-#include "nifti1_io.h"
+#include "Debug.hpp"
 
 // Eigen headers are in there because of the nvcc preprocessing step
 #include "Eigen/Core"
@@ -20,11 +20,8 @@
 */
 template<class T>
 void svd(T **in, size_t size_m, size_t size_n, T * w, T **v) {
-   if (size_m == 0 || size_n == 0) {
-      reg_print_fct_error("svd");
-      reg_print_msg_error("The specified matrix is empty");
-      reg_exit();
-   }
+   if (size_m == 0 || size_n == 0)
+      NR_FATAL_ERROR("The specified matrix is empty");
 
 #ifdef _WIN32
    long sm, sn, sn2;
@@ -36,10 +33,10 @@ void svd(T **in, size_t size_m, size_t size_n, T * w, T **v) {
    Eigen::MatrixXd m(size_m, size_n);
 
    //Convert to Eigen matrix
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(in,m, size__m, size__n) \
-   private(sm, sn)
+   private(sn)
 #endif
    for (sm = 0; sm < size__m; sm++)
    {
@@ -51,10 +48,10 @@ void svd(T **in, size_t size_m, size_t size_n, T * w, T **v) {
 
    Eigen::JacobiSVD<Eigen::MatrixXd> svd(m, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(in,svd,v,w, size__n,size__m) \
-   private(sn2, sn, sm)
+   private(sn2, sm)
 #endif
    for (sn = 0; sn < size__n; sn++) {
       w[sn] = static_cast<T>(svd.singularValues()(sn));
@@ -81,14 +78,11 @@ template void svd<double>(double **in, size_t m, size_t n, double * w, double **
 */
 template<class T>
 void svd(T **in, size_t size_m, size_t size_n, T ***U, T ***S, T ***V) {
-   if (in == NULL) {
-      reg_print_fct_error("svd");
-      reg_print_msg_error("The specified matrix is empty");
-      reg_exit();
-   }
+   if (in == nullptr)
+      NR_FATAL_ERROR("The specified matrix is empty");
 
 #ifdef _WIN32
-   long sm, sn, sn2, min_dim, i, j;
+   long sm, sn, min_dim, i, j;
    long size__m = (long)size_m, size__n = (long)size_n;
 #else
    size_t sm, sn, min_dim, i, j;
@@ -97,10 +91,10 @@ void svd(T **in, size_t size_m, size_t size_n, T ***U, T ***S, T ***V) {
    Eigen::MatrixXd m(size__m, size__n);
 
    //Convert to Eigen matrix
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(in, m, size__m, size__n) \
-   private(sm, sn)
+   private(sn)
 #endif
    for (sm = 0; sm < size__m; sm++)
    {
@@ -113,10 +107,10 @@ void svd(T **in, size_t size_m, size_t size_n, T ***U, T ***S, T ***V) {
    Eigen::JacobiSVD<Eigen::MatrixXd> svd(m, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
    min_dim = std::min(size__m, size__n);
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(svd, min_dim, S) \
-   private(i, j)
+   private(j)
 #endif
    //Convert to C matrix
    for (i = 0; i < min_dim; i++) {
@@ -131,10 +125,10 @@ void svd(T **in, size_t size_m, size_t size_n, T ***U, T ***S, T ***V) {
    }
 
    if (size__m > size__n) {
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(svd, min_dim, V) \
-   private(i, j)
+   private(j)
 #endif
       //Convert to C matrix
       for (i = 0; i < min_dim; i++) {
@@ -143,10 +137,10 @@ void svd(T **in, size_t size_m, size_t size_n, T ***U, T ***S, T ***V) {
 
          }
       }
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(svd, size__m, size__n, U) \
-   private(i, j)
+   private(j)
 #endif
       for (i = 0; i < size__m; i++) {
          for (j = 0; j < size__n; j++) {
@@ -155,10 +149,10 @@ void svd(T **in, size_t size_m, size_t size_n, T ***U, T ***S, T ***V) {
       }
    }
    else {
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(svd, min_dim, U) \
-   private(i, j)
+   private(j)
 #endif
       //Convert to C matrix
       for (i = 0; i < min_dim; i++) {
@@ -167,10 +161,10 @@ void svd(T **in, size_t size_m, size_t size_n, T ***U, T ***S, T ***V) {
 
          }
       }
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(svd, size__m, size__n, V) \
-   private(i, j)
+   private(j)
 #endif
       for (i = 0; i < size__n; i++) {
          for (j = 0; j < size__m; j++) {
@@ -185,13 +179,9 @@ template void svd<double>(double **in, size_t size_m, size_t size_n, double ***U
 /* *************************************************************** */
 template<class T>
 T reg_matrix2DDet(T** mat, size_t m, size_t n) {
-   if (m != n) {
-      char text[255]; sprintf(text, "The matrix have to be square: [%zu %zu]",
-                              m, n);
-      reg_print_fct_error("reg_matrix2DDeterminant");
-      reg_print_msg_error(text);
-      reg_exit();
-   }
+   if (m != n)
+      NR_FATAL_ERROR("The matrix have to be square: [" + std::to_string(m) + " " + std::to_string(n) + "]");
+
    double res;
    if (m == 2) {
       res = static_cast<double>(mat[0][0]) * static_cast<double>(mat[1][1]) - static_cast<double>(mat[1][0]) * static_cast<double>(mat[0][1]);
@@ -298,7 +288,7 @@ void reg_mat33_logm(mat33 *in_tensor)
    // is a general eigensolver and the logarithm function should
    // suceed unless convergence just isn't happening.
    det = tensor.determinant();
-   if(all_zeros==true || det == 0){
+   if(all_zeros || det == 0){
       reg_mat33_to_nan(in_tensor);
       return;
    }

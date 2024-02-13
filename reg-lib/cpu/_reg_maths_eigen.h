@@ -1,8 +1,6 @@
-//_reg_maths_eigen.h
-#ifndef _REG_MATHS_EIGEN_H
-#define _REG_MATHS_EIGEN_H
+#pragma once
 
-#include "nifti1_io.h"
+#include "RNifti.h"
 
 /* *************************************************************** */
 /* Functions calling the Eigen library                             */
@@ -10,13 +8,13 @@
 /* *************************************************************** */
 
 /* *************************************************************** */
-extern "C++" template <class T>
+template <class T>
 void svd(T **in, size_t m, size_t n, T * w, T **v);
 /* *************************************************************** */
-extern "C++" template <class T>
+template <class T>
 void svd(T **in, size_t m, size_t n, T ***U, T ***S, T ***V);
 /* *************************************************************** */
-extern "C++" template<class T>
+template<class T>
 T reg_matrix2DDet(T** mat, size_t m, size_t n);
 /* *************************************************************** */
 /** @brief Compute the inverse of a  4-by-4 matrix
@@ -47,5 +45,3 @@ mat44 reg_mat44_logm(const mat44 *mat);
 * framework
 */
 mat44 reg_mat44_avg2(mat44 const* A, mat44 const* b);
-
-#endif

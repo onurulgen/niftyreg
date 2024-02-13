@@ -10,8 +10,7 @@
  *
  */
 
-#ifndef _REG_POLYAFFINE_H
-#define _REG_POLYAFFINE_H
+#pragma once
 
 #include "_reg_base.h"
 
@@ -32,13 +31,11 @@ protected:
    void PrintCurrentObjFunctionValue(T);
    void PrintInitialObjFunctionValue();
    void AllocateTransformationGradient();
-   void ClearTransformationGradient();
+   void DeallocateTransformationGradient();
 
 public:
-   reg_polyAffine(int refTimePoint,int floTimePoint);
+   reg_polyAffine(int refTimePoints,int floTimePoints);
    ~reg_polyAffine();
 };
 
 #include "_reg_polyAffine.cpp"
-
-#endif // _REG_POLYAFFINE_H

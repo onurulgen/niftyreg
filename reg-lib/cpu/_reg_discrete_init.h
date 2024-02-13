@@ -12,11 +12,10 @@
  *
  */
 
-#ifndef _reg_discrete_init_H
-#define _reg_discrete_init_H
+#pragma once
 
 #include "_reg_measure.h"
-#include "_reg_optimiser.h"
+#include "Optimiser.hpp"
 #include "_reg_localTrans_regul.h"
 #include "_reg_localTrans.h"
 #include "_reg_ReadWriteImage.h"
@@ -47,7 +46,7 @@ private:
    void GetDiscretisedMeasure();
    void AddL2Penalisation(float);
    void GetRegularisedMeasure();
-   void getOptimalLabel();
+   void GetOptimalLabel();
    void UpdateTransformation();
 
    reg_measure *measure; ///< Measure of similarity object to use for the data term
@@ -60,7 +59,7 @@ private:
    int image_dim; ///< Dimension of the reference image
    size_t node_number; ///< Number of nodes in the tree
 
-   float **discrete_values_mm; ///< All discretised values in millimeter
+   float **discrete_values_mm; ///< All discretised values in millimetre
 
    int label_1D_num; ///< Number of discretised values per axis
    int label_nD_num; ///< Total number of discretised values
@@ -76,4 +75,3 @@ private:
    float* l2_penalisation;
 };
 /********************************************************************************************************/
-#endif // _reg_discrete_init_H

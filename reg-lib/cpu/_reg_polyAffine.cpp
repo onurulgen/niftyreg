@@ -10,31 +10,23 @@
  *
  */
 
-#ifndef _REG_POLYAFFINE_CPP
-#define _REG_POLYAFFINE_CPP
-
 #include "_reg_polyAffine.h"
 
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 template <class T>
-reg_polyAffine<T>::reg_polyAffine(int refTimePoint,int floTimePoint)
-   : reg_base<T>::reg_base(refTimePoint,floTimePoint)
+reg_polyAffine<T>::reg_polyAffine(int refTimePoints,int floTimePoints)
+   : reg_base<T>::reg_base(refTimePoints,floTimePoints)
 {
    this->executableName=(char *)"NiftyReg PolyAffine";
-
-#ifndef NDEBUG
-   printf("[NiftyReg DEBUG] reg_polyAffine constructor called\n");
-#endif
+   NR_FUNC_CALLED();
 }
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 template <class T>
 reg_polyAffine<T>::~reg_polyAffine()
 {
-#ifndef NDEBUG
-   printf("[NiftyReg DEBUG] reg_polyAffine destructor called\n");
-#endif
+   NR_FUNC_CALLED();
 }
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
@@ -131,11 +123,9 @@ void reg_polyAffine<T>::AllocateTransformationGradient()
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 template <class T>
-void reg_polyAffine<T>::ClearTransformationGradient()
+void reg_polyAffine<T>::DeallocateTransformationGradient()
 {
 
 }
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-
-#endif // _REG_POLYAFFINE_CPP

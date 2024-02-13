@@ -12,14 +12,13 @@
  *
  */
 
-#ifndef _REG_READWRITEIMAGE_H
-#define _REG_READWRITEIMAGE_H
+#pragma once
 
-#include "nifti1_io.h"
 #include <string>
+#include "_reg_tools.h"
 
 #include "reg_png.h"
-#ifdef _USE_NRRD
+#ifdef USE_NRRD
 #include "reg_nrrd.h"
 #endif
 /** @defgroup NIFTYREG_FILEFORMAT_TYPE
@@ -28,7 +27,7 @@
  */
 #define NR_NII_FORMAT 0
 #define NR_PNG_FORMAT 1
-#ifdef _USE_NRRD
+#ifdef USE_NRRD
 #define NR_NRRD_FORMAT 2
 #endif
 /* @} */
@@ -39,7 +38,7 @@
   * @param filename Filename of the input images
   * @return Code, NIFTYREG_FILEFORMAT_TYPE,  that encode the file format
   */
-int reg_io_checkFileFormat(const char *filename);
+int reg_io_checkFileFormat(const std::string& filename);
 /* *************************************************************** */
 /** The function expects a filename and returns a nifti_image structure
   * The function will use to correct library and will return a NULL image
@@ -70,6 +69,5 @@ void reg_io_WriteImageFile(nifti_image *image, const char *filename);
   * The image will be displayed on the standard output
   * @param Nifti image to be displayed
   */
-void reg_io_diplayImageData(nifti_image *image);
+void reg_io_displayImageData(nifti_image *image);
 /* *************************************************************** */
-#endif

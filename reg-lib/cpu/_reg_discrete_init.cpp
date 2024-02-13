@@ -17,17 +17,14 @@ reg_discrete_init::reg_discrete_init(reg_measure *_measure,
    this->regularisation_weight = _reg_weight;
    this->reg_max_it = _reg_max_it;
 
-   if(this->discrete_radius/this->discrete_increment !=
-      (float)this->discrete_radius/(float)this->discrete_increment){
-      reg_print_fct_error("reg_discrete_init:reg_discrete_init()");
-      reg_print_msg_error("The discrete_radius is expected to be a multiple of discretise_increment");
-   }
+   if (this->discrete_radius / this->discrete_increment !=
+       (float)this->discrete_radius / (float)this->discrete_increment)
+      NR_FATAL_ERROR("The discrete_radius is expected to be a multiple of discretise_increment");
 
    this->image_dim = this->referenceImage->nz > 1 ? 3 :2;
    this->label_1D_num = (this->discrete_radius / this->discrete_increment ) * 2 + 1;
    this->label_nD_num = static_cast<int>(std::pow((double) this->label_1D_num,this->image_dim));
-   this->node_number = (size_t)this->controlPointImage->nx *
-         this->controlPointImage->ny * this->controlPointImage->nz;
+   this->node_number = NiftiImage::calcVoxelNumber(this->controlPointImage, 3);
 
    this->input_transformation=nifti_copy_nim_info(this->controlPointImage);
    this->input_transformation->data=(float *)malloc(this->node_number*this->image_dim*sizeof(float));
@@ -40,7 +37,7 @@ reg_discrete_init::reg_discrete_init(reg_measure *_measure,
       currentValue+=this->discrete_increment;
    }
 
-   // Allocate the discretised values in millimeter
+   // Allocate the discretised values in millimetre
    this->discrete_values_mm = (float **)malloc(this->image_dim*sizeof(float *));
    for(int i=0;i<this->image_dim;++i){
       this->discrete_values_mm[i] = (float *)malloc(this->label_nD_num*sizeof(float));
@@ -100,34 +97,34 @@ reg_discrete_init::reg_discrete_init(reg_measure *_measure,
 /*****************************************************/
 reg_discrete_init::~reg_discrete_init()
 {
-   if(this->discretised_measures!=NULL)
+   if(this->discretised_measures!=nullptr)
       free(this->discretised_measures);
-   this->discretised_measures=NULL;
+   this->discretised_measures=nullptr;
 
-   if(this->regularised_measures!=NULL)
+   if(this->regularised_measures!=nullptr)
       free(this->regularised_measures);
-   this->regularised_measures=NULL;
+   this->regularised_measures=nullptr;
 
-   if(this->l2_penalisation!=NULL)
+   if(this->l2_penalisation!=nullptr)
       free(this->l2_penalisation);
-   this->l2_penalisation=NULL;
+   this->l2_penalisation=nullptr;
 
-   if(this->optimal_label_index!=NULL)
+   if(this->optimal_label_index!=nullptr)
       free(this->optimal_label_index);
-   this->optimal_label_index=NULL;
+   this->optimal_label_index=nullptr;
 
    for(int i=0; i<this->image_dim; ++i){
-      if(this->discrete_values_mm[i]!=NULL)
+      if(this->discrete_values_mm[i]!=nullptr)
          free(this->discrete_values_mm[i]);
-      this->discrete_values_mm[i]=NULL;
+      this->discrete_values_mm[i]=nullptr;
    }
-   if(this->discrete_values_mm!=NULL)
+   if(this->discrete_values_mm!=nullptr)
       free(this->discrete_values_mm);
-   this->discrete_values_mm=NULL;
+   this->discrete_values_mm=nullptr;
 
-   if(this->input_transformation!=NULL)
+   if(this->input_transformation!=nullptr)
       nifti_image_free(this->input_transformation);
-   this->input_transformation=NULL;
+   this->input_transformation=nullptr;
 }
 /*****************************************************/
 /*****************************************************/
@@ -137,13 +134,11 @@ void reg_discrete_init::GetDiscretisedMeasure()
                                 this->discretised_measures,
                                 this->discrete_radius,
                                 this->discrete_increment);
-#ifndef NDEBUG
-   reg_print_msg_debug("reg_discrete_init::GetDiscretisedMeasure done");
-#endif
+   NR_FUNC_CALLED();
 }
 /*****************************************************/
 /*****************************************************/
-void reg_discrete_init::getOptimalLabel()
+void reg_discrete_init::GetOptimalLabel()
 {
    this->regularisation_convergence=0;
    size_t opt_label = 0;
@@ -157,9 +152,7 @@ void reg_discrete_init::getOptimalLabel()
       if(current_optimal != opt_label)
          ++this->regularisation_convergence;
    }
-#ifndef NDEBUG
-   reg_print_msg_debug("reg_discrete_init::getOptimalLabel done");
-#endif
+   NR_FUNC_CALLED();
 }
 /*****************************************************/
 /*****************************************************/
@@ -191,9 +184,7 @@ void reg_discrete_init::UpdateTransformation()
       }
    }
 
-#ifndef NDEBUG
-   reg_print_msg_debug("reg_discrete_init::UpdateTransformation done");
-#endif
+   NR_FUNC_CALLED();
 }
 /*****************************************************/
 /*****************************************************/
@@ -212,7 +203,7 @@ void reg_discrete_init::AddL2Penalisation(float weight)
    int _node_number = static_cast<int>(this->node_number);
    int _label_nD_num = this->label_nD_num;
    float *_discretised_measures = &this->discretised_measures[0];
-#if defined (_OPENMP)
+#ifdef _OPENMP
    #pragma omp parallel for default(none) \
    shared(_node_number, _label_nD_num, _discretised_measures, l2_penalisation) \
    private(measure_index, n, label_index)
@@ -297,12 +288,12 @@ void reg_discrete_init::GetRegularisedMeasure()
             splineCoeffY[13] = 0.f;
             splineCoeffZ[13] = 0.f;
             // Compute the second derivative without the central control point
-            float XX_x=0.0, YY_x=0.0, ZZ_x=0.0;
-            float XY_x=0.0, YZ_x=0.0, XZ_x=0.0;
-            float XX_y=0.0, YY_y=0.0, ZZ_y=0.0;
-            float XY_y=0.0, YZ_y=0.0, XZ_y=0.0;
-            float XX_z=0.0, YY_z=0.0, ZZ_z=0.0;
-            float XY_z=0.0, YZ_z=0.0, XZ_z=0.0;
+            float XX_x=0, YY_x=0, ZZ_x=0;
+            float XY_x=0, YZ_x=0, XZ_x=0;
+            float XX_y=0, YY_y=0, ZZ_y=0;
+            float XY_y=0, YZ_y=0, XZ_y=0;
+            float XX_z=0, YY_z=0, ZZ_z=0;
+            float XY_z=0, YZ_z=0, XZ_z=0;
             for(i=0; i<27; i++){
                XX_x += basisXX[i]*splineCoeffX[i];
                YY_x += basisYY[i]*splineCoeffX[i];
@@ -338,24 +329,24 @@ void reg_discrete_init::GetRegularisedMeasure()
                this->regularised_measures[measure_index] =
                      (1.f-this->regularisation_weight-this->l2_weight) * this->discretised_measures[measure_index] -
                      this->regularisation_weight * (
-                     reg_pow2(XX_x + valX * _basisXX) +
-                     reg_pow2(XX_y + valY * _basisXX) +
-                     reg_pow2(XX_z + valZ * _basisXX) +
-                     reg_pow2(YY_x + valX * _basisYY) +
-                     reg_pow2(YY_y + valY * _basisYY) +
-                     reg_pow2(YY_z + valZ * _basisYY) +
-                     reg_pow2(ZZ_x + valX * _basisZZ) +
-                     reg_pow2(ZZ_y + valY * _basisZZ) +
-                     reg_pow2(ZZ_z + valZ * _basisZZ) + 2.0 * (
-                     reg_pow2(XY_x + valX * _basisXY) +
-                     reg_pow2(XY_y + valY * _basisXY) +
-                     reg_pow2(XY_z + valZ * _basisXY) +
-                     reg_pow2(XZ_x + valX * _basisXZ) +
-                     reg_pow2(XZ_y + valY * _basisXZ) +
-                     reg_pow2(XZ_z + valZ * _basisXZ) +
-                     reg_pow2(YZ_x + valX * _basisYZ) +
-                     reg_pow2(YZ_y + valY * _basisYZ) +
-                     reg_pow2(YZ_z + valZ * _basisYZ)
+                     Square(XX_x + valX * _basisXX) +
+                     Square(XX_y + valY * _basisXX) +
+                     Square(XX_z + valZ * _basisXX) +
+                     Square(YY_x + valX * _basisYY) +
+                     Square(YY_y + valY * _basisYY) +
+                     Square(YY_z + valZ * _basisYY) +
+                     Square(ZZ_x + valX * _basisZZ) +
+                     Square(ZZ_y + valY * _basisZZ) +
+                     Square(ZZ_z + valZ * _basisZZ) + 2.0 * (
+                     Square(XY_x + valX * _basisXY) +
+                     Square(XY_y + valY * _basisXY) +
+                     Square(XY_z + valZ * _basisXY) +
+                     Square(XZ_x + valX * _basisXZ) +
+                     Square(XZ_y + valY * _basisXZ) +
+                     Square(XZ_z + valZ * _basisXZ) +
+                     Square(YZ_x + valX * _basisYZ) +
+                     Square(YZ_y + valY * _basisYZ) +
+                     Square(YZ_z + valZ * _basisYZ)
                      ) ) - this->l2_weight * this->l2_penalisation[label];
             } // label
             ++node;
@@ -364,24 +355,17 @@ void reg_discrete_init::GetRegularisedMeasure()
    } // z
    reg_getDeformationFromDisplacement(this->controlPointImage);
    reg_getDeformationFromDisplacement(this->input_transformation);
-#ifndef NDEBUG
-   reg_print_msg_debug("reg_discrete_init::GetRegularisedMeasure done");
-#endif
+   NR_FUNC_CALLED();
 }
 /*****************************************************/
 /*****************************************************/
 void reg_discrete_init::Run()
 {
-   char text[255];
-   sprintf(text, "Control point number = %lu", this->node_number);
-   reg_print_info("reg_discrete_init", text);
-   sprintf(text, "Discretised radius (voxel) = %i", this->discrete_radius);
-   reg_print_info("reg_discrete_init", text);
-   sprintf(text, "Discretised step (voxel) = %i", this->discrete_increment);
-   reg_print_info("reg_discrete_init", text);
-   sprintf(text, "Discretised label number = %i", this->label_nD_num);
-   reg_print_info("reg_discrete_init", text);
-   // Store the intial transformation parametrisation
+   NR_VERBOSE("Control point number = " << this->node_number);
+   NR_VERBOSE("Discretised radius (voxel) = " << this->discrete_radius);
+   NR_VERBOSE("Discretised step (voxel) = " << this->discrete_increment);
+   NR_VERBOSE("Discretised label number = " << this->label_nD_num);
+   // Store the initial transformation parametrisation
    memcpy(this->input_transformation->data, this->controlPointImage->data,
           this->node_number*this->image_dim*sizeof(float));
    // Compute the discretised data term values
@@ -393,25 +377,21 @@ void reg_discrete_init::Run()
           this->discretised_measures,
           this->label_nD_num*this->node_number*sizeof(float));
    // Extract the best label
-   this->getOptimalLabel();
+   this->GetOptimalLabel();
    // Update the control point positions
    this->UpdateTransformation();
    // Run the regularisation optimisation
    for(int i=0; i< this->reg_max_it; ++i){
       this->GetRegularisedMeasure();
-      this->getOptimalLabel();
+      this->GetOptimalLabel();
       this->UpdateTransformation();
-      sprintf(text, "Regularisation %i/%i - BE=%.2f - [%2.2f%%]",
-             i+1, this->reg_max_it,
-             reg_spline_approxBendingEnergy(this->controlPointImage),
-             100.f*(float)this->regularisation_convergence/this->node_number);
-      reg_print_info("reg_discrete_init", text);
+      NR_VERBOSE("Regularisation " << i+1 << "/" << this->reg_max_it <<
+                 " - BE=" << reg_spline_approxBendingEnergy(this->controlPointImage) <<
+                 " - [" << 100.f*(float)this->regularisation_convergence/this->node_number << "%]");
       //if(this->regularisation_convergence<this->node_number/100)
       //   break;
    }
-#ifndef NDEBUG
-   reg_print_msg_debug("reg_discrete_init::Run done");
-#endif
+   NR_FUNC_CALLED();
 }
 /*****************************************************/
 /*****************************************************/

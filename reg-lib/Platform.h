@@ -1,38 +1,66 @@
-#ifndef PLATFORM_H_
-#define PLATFORM_H_
+#pragma once
 
-#include <map>
-#include <string>
-#include <vector>
+#include "F3dContent.h"
+#include "ComputeFactory.h"
+#include "ContentCreatorFactory.h"
+#include "KernelFactory.h"
+#include "MeasureFactory.h"
+#include "Optimiser.hpp"
 
-#define NR_PLATFORM_CPU  0
-#define NR_PLATFORM_CUDA 1
-#define NR_PLATFORM_CL   2
-
-class Kernel;
-class KernelFactory;
-class AladinContent;
+enum class PlatformType { Cpu, Cuda, OpenCl };
+constexpr PlatformType PlatformTypes[] = {
+    PlatformType::Cpu,
+#ifdef USE_CUDA
+    PlatformType::Cuda,
+#endif
+#ifdef USE_OPENCL
+    PlatformType::OpenCl
+#endif
+};
 
 class Platform {
 public:
-	Platform(int platformCode);
-	virtual ~Platform();
+    Platform(const PlatformType platformTypeIn);
+    ~Platform();
 
-    Kernel *createKernel(const std::string& name, AladinContent *con) const;
-    std::string getName();
+    std::string GetName() const;
+    PlatformType GetPlatformType() const;
+    unsigned GetGpuIdx() const;
+    void SetGpuIdx(unsigned gpuIdxIn);
 
-    int getPlatformCode();
-    //void setPlatformCode(const int platformCodeIn);
-    void setGpuIdx(unsigned gpuIdxIn);
-    unsigned getGpuIdx();
+    Compute* CreateCompute(Content& con) const;
+    ContentCreator* CreateContentCreator(const ContentType conType = ContentType::Base) const;
+    Kernel* CreateKernel(const std::string& name, Content *con) const;
+    Measure* CreateMeasure() const;
+    template<typename Type>
+    Optimiser<Type>* CreateOptimiser(F3dContent& con,
+                                     InterfaceOptimiser& opt,
+                                     size_t maxIterationNumber,
+                                     bool useConjGradient,
+                                     bool optimiseX,
+                                     bool optimiseY,
+                                     bool optimiseZ,
+                                     F3dContent *conBw = nullptr) const;
+
+    static constexpr bool IsCudaEnabled() {
+#ifdef USE_CUDA
+        return true;
+#endif
+        return false;
+    }
+    static constexpr bool IsOpenClEnabled() {
+#ifdef USE_OPENCL
+        return true;
+#endif
+        return false;
+    }
 
 private:
-    KernelFactory* factory;
+    ComputeFactory *computeFactory = nullptr;
+    ContentCreatorFactory *contentCreatorFactory = nullptr;
+    KernelFactory *kernelFactory = nullptr;
+    MeasureFactory *measureFactory = nullptr;
     std::string platformName;
-    int platformCode;
+    PlatformType platformType;
     unsigned gpuIdx;
 };
-
-
-
-#endif //PLATFORM_H_

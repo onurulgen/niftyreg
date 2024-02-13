@@ -10,9 +10,6 @@
  *
  */
 
-#ifndef _REG_FEMTRANS_CPP
-#define _REG_FEMTRANS_CPP
-
 #include "_reg_femTrans.h"
 
 float reg_getTetrahedronVolume(float *node1,float *node2,float *node3,float *node4)
@@ -33,15 +30,15 @@ float reg_getTetrahedronVolume(float *node1,float *node2,float *node3,float *nod
 }
 
 void reg_fem_InitialiseTransformation(int *elementNodes,
-                                      unsigned int elementNumber,
+                                      unsigned elementNumber,
                                       float *nodePositions,
                                       nifti_image *deformationFieldImage,
-                                      unsigned int *closestNodes,
+                                      unsigned *closestNodes,
                                       float *femInterpolationWeight
                                      )
 {
    // Set all the closest nodes and coefficients to zero
-   for(int i=0; i<4*deformationFieldImage->nx*deformationFieldImage->ny*deformationFieldImage->nz; ++i)
+   for (int i = 0; i < 4 * NiftiImage::calcVoxelNumber(deformationFieldImage, 3); ++i)
    {
       closestNodes[i]=0;
       femInterpolationWeight[i]=0.f;
@@ -61,10 +58,10 @@ void reg_fem_InitialiseTransformation(int *elementNodes,
    float fullVolume;
    float subVolume[4];
 
-   for(unsigned int element=0; element<elementNumber; ++element)
+   for(unsigned element=0; element<elementNumber; ++element)
    {
       // Compute the element bounding box in voxel coordinate
-      for(unsigned int i=0; i<4; ++i)
+      for(unsigned i=0; i<4; ++i)
       {
          currentNodes[i]=elementNodes[4*element+i];
          nodeRealPosition[0]=nodePositions[3*currentNodes[i]];
@@ -73,17 +70,17 @@ void reg_fem_InitialiseTransformation(int *elementNodes,
          reg_mat44_mul(realToVoxel, nodeRealPosition, nodeVoxelIndices[i]);
       }
 
-      int xRange[2]= {(int)reg_ceil(nodeVoxelIndices[0][0]), (int)reg_floor(nodeVoxelIndices[0][0])};
-      int yRange[2]= {(int)reg_ceil(nodeVoxelIndices[0][1]), (int)reg_floor(nodeVoxelIndices[0][1])};
-      int zRange[2]= {(int)reg_ceil(nodeVoxelIndices[0][2]), (int)reg_floor(nodeVoxelIndices[0][2])};
-      for(unsigned int i=1; i<4; ++i)
+      int xRange[2]= {Ceil(nodeVoxelIndices[0][0]), Floor(nodeVoxelIndices[0][0])};
+      int yRange[2]= {Ceil(nodeVoxelIndices[0][1]), Floor(nodeVoxelIndices[0][1])};
+      int zRange[2]= {Ceil(nodeVoxelIndices[0][2]), Floor(nodeVoxelIndices[0][2])};
+      for(unsigned i=1; i<4; ++i)
       {
-         xRange[0]=xRange[0]<(int)reg_ceil(nodeVoxelIndices[i][0])?xRange[0]:(int)reg_ceil(nodeVoxelIndices[i][0]);
-         xRange[1]=xRange[1]>(int)reg_floor(nodeVoxelIndices[i][0])?xRange[1]:(int)reg_floor(nodeVoxelIndices[i][0]);
-         yRange[0]=yRange[0]<(int)reg_ceil(nodeVoxelIndices[i][1])?yRange[0]:(int)reg_ceil(nodeVoxelIndices[i][1]);
-         yRange[1]=yRange[1]>(int)reg_floor(nodeVoxelIndices[i][1])?yRange[1]:(int)reg_floor(nodeVoxelIndices[i][1]);
-         zRange[0]=zRange[0]<(int)reg_ceil(nodeVoxelIndices[i][2])?zRange[0]:(int)reg_ceil(nodeVoxelIndices[i][2]);
-         zRange[1]=zRange[1]>(int)reg_floor(nodeVoxelIndices[i][2])?zRange[1]:(int)reg_floor(nodeVoxelIndices[i][2]);
+         xRange[0]=xRange[0]<Ceil(nodeVoxelIndices[i][0])?xRange[0]:Ceil(nodeVoxelIndices[i][0]);
+         xRange[1]=xRange[1]>Floor(nodeVoxelIndices[i][0])?xRange[1]:Floor(nodeVoxelIndices[i][0]);
+         yRange[0]=yRange[0]<Ceil(nodeVoxelIndices[i][1])?yRange[0]:Ceil(nodeVoxelIndices[i][1]);
+         yRange[1]=yRange[1]>Floor(nodeVoxelIndices[i][1])?yRange[1]:Floor(nodeVoxelIndices[i][1]);
+         zRange[0]=zRange[0]<Ceil(nodeVoxelIndices[i][2])?zRange[0]:Ceil(nodeVoxelIndices[i][2]);
+         zRange[1]=zRange[1]>Floor(nodeVoxelIndices[i][2])?zRange[1]:Floor(nodeVoxelIndices[i][2]);
       }
 
       xRange[0]=xRange[0]<0?0:xRange[0];
@@ -130,7 +127,7 @@ void reg_fem_InitialiseTransformation(int *elementNodes,
                if(fabs(fullVolume/(subVolume[0]+subVolume[1]+subVolume[2]+subVolume[3])-1.f)<.000001f)
                {
                   int index=(z*deformationFieldImage->ny+y)*deformationFieldImage->nx+x;
-                  for(unsigned int i=0; i<4; ++i)
+                  for(unsigned i=0; i<4; ++i)
                   {
                      closestNodes[4*index+i]=currentNodes[i];
                      femInterpolationWeight[4*index+i]=subVolume[i]/fullVolume;
@@ -146,30 +143,29 @@ void reg_fem_InitialiseTransformation(int *elementNodes,
 
 void reg_fem_getDeformationField(float *nodePositions,
                                  nifti_image *deformationFieldImage,
-                                 unsigned int *closestNodes,
+                                 unsigned *closestNodes,
                                  float *femInterpolationWeight
                                 )
 {
 #ifdef _WIN32
-   long voxel;
-   long voxelNumber=(long)deformationFieldImage->nx*
-      deformationFieldImage->ny*deformationFieldImage->nz;
+    long voxel;
+    const long voxelNumber = (long)NiftiImage::calcVoxelNumber(deformationFieldImage, 3);
 #else
-   size_t voxel;
-   size_t voxelNumber=(size_t)deformationFieldImage->nx*
-      deformationFieldImage->ny*deformationFieldImage->nz;
+    size_t voxel;
+    const size_t voxelNumber = NiftiImage::calcVoxelNumber(deformationFieldImage, 3);
 #endif
+
    float *defPtrX = static_cast<float *>(deformationFieldImage->data);
    float *defPtrY = &defPtrX[voxelNumber];
    float *defPtrZ = &defPtrY[voxelNumber];
 
    float coefficients[4];
    float positionA[3], positionB[3], positionC[3], positionD[3];
-#if defined (_OPENMP)
+#ifdef _OPENMP
    #pragma omp parallel for default(none) \
    shared(defPtrX, defPtrY, defPtrZ, femInterpolationWeight, \
           nodePositions, closestNodes, voxelNumber) \
-   private(voxel, coefficients, positionA, positionB, positionC, positionD)
+   private(coefficients, positionA, positionB, positionC, positionD)
 #endif
    for(voxel=0; voxel<voxelNumber; ++voxel)
    {
@@ -213,25 +209,23 @@ void reg_fem_getDeformationField(float *nodePositions,
 }// reg_fem_getDeformationField
 
 void reg_fem_voxelToNodeGradient(nifti_image *voxelBasedGradient,
-                                 unsigned int *closestNodes,
+                                 unsigned *closestNodes,
                                  float *femInterpolationWeight,
-                                 unsigned int nodeNumber,
+                                 unsigned nodeNumber,
                                  float *femBasedGradient)
 {
-   unsigned int voxelNumber = voxelBasedGradient->nx *
-                              voxelBasedGradient->ny *
-                              voxelBasedGradient->nz;
+   const size_t voxelNumber = NiftiImage::calcVoxelNumber(voxelBasedGradient, 3);
    float *voxGradPtrX = static_cast<float *>(voxelBasedGradient->data);
    float *voxGradPtrY = &voxGradPtrX[voxelNumber];
    float *voxGradPtrZ = &voxGradPtrY[voxelNumber];
 
-   for(unsigned int node=0; node<3*nodeNumber; ++node)
+   for(unsigned node=0; node<3*nodeNumber; ++node)
       femBasedGradient[node]=0.f;
 
-   unsigned int currentNodes[4], voxel;
+   unsigned currentNodes[4];
    float currentGradient[3];
    float coefficients[4];
-   for(voxel=0; voxel<voxelNumber; ++voxel)
+   for(size_t voxel=0; voxel<voxelNumber; ++voxel)
    {
       currentNodes[0]=closestNodes[4*voxel];
       currentNodes[1]=closestNodes[4*voxel+1];
@@ -247,7 +241,7 @@ void reg_fem_voxelToNodeGradient(nifti_image *voxelBasedGradient,
       currentGradient[1]=voxGradPtrY[voxel];
       currentGradient[2]=voxGradPtrZ[voxel];
 
-      for(unsigned int i=0; i<4; ++i)
+      for(unsigned i=0; i<4; ++i)
       {
          femBasedGradient[3*currentNodes[i]  ] += currentGradient[0]*coefficients[i];
          femBasedGradient[3*currentNodes[i]+1] += currentGradient[1]*coefficients[i];
@@ -257,5 +251,3 @@ void reg_fem_voxelToNodeGradient(nifti_image *voxelBasedGradient,
 
    return;
 }// reg_fem_voxelToNodeGradient
-
-#endif

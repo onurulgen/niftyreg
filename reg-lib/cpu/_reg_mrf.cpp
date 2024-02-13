@@ -3,7 +3,6 @@
 //DEBUG
 #include <iostream>
 #include <fstream>
-#include "_reg_ReadWriteBinary.h"
 //DEBUG
 /*****************************************************/
 reg_mrf::reg_mrf(int _discrete_radius,
@@ -12,9 +11,9 @@ reg_mrf::reg_mrf(int _discrete_radius,
                  int _img_dim,
                  size_t _node_number)
 {
-    this->measure = NULL;
-    this->referenceImage = NULL;
-    this->controlPointImage = NULL;
+    this->measure = nullptr;
+    this->referenceImage = nullptr;
+    this->controlPointImage = nullptr;
     this->discrete_radius = _discrete_radius;
     this->discrete_increment = _discrete_increment;
     this->regularisation_weight = _reg_weight;
@@ -24,7 +23,7 @@ reg_mrf::reg_mrf(int _discrete_radius,
     this->label_nD_num = static_cast<int>(std::pow((double) this->label_1D_num,this->image_dim));
     this->node_number = _node_number;
 
-    // Allocate the discretised values in millimeter
+    // Allocate the discretised values in millimetre
     this->discrete_values_mm = (float **)malloc(this->image_dim*sizeof(float *));
     for(int i=0;i<this->image_dim;++i){
         this->discrete_values_mm[i] = (float *)malloc(this->label_nD_num*sizeof(float));
@@ -59,8 +58,7 @@ reg_mrf::reg_mrf(reg_measure *_measure,
    this->image_dim = this->referenceImage->nz > 1 ? 3 :2;
    this->label_1D_num = (this->discrete_radius / this->discrete_increment ) * 2 + 1;
    this->label_nD_num = static_cast<int>(std::pow((double) this->label_1D_num,this->image_dim));
-   this->node_number = (size_t)this->controlPointImage->nx *
-         this->controlPointImage->ny * this->controlPointImage->nz;
+   this->node_number = NiftiImage::calcVoxelNumber(this->controlPointImage, 3);
 
    this->input_transformation=nifti_copy_nim_info(this->controlPointImage);
    this->input_transformation->data=(float *)malloc(this->node_number*this->image_dim*sizeof(float));
@@ -72,7 +70,7 @@ reg_mrf::reg_mrf(reg_measure *_measure,
       currentValue+=this->discrete_increment;
    }
 
-   // Allocate the discretised values in millimeter
+   // Allocate the discretised values in millimetre
    this->discrete_values_mm = (float **)malloc(this->image_dim*sizeof(float *));
    for(int i=0;i<this->image_dim;++i){
        this->discrete_values_mm[i] = (float *)malloc(this->label_nD_num*sizeof(float));
@@ -124,42 +122,42 @@ reg_mrf::reg_mrf(reg_measure *_measure,
 /*****************************************************/
 reg_mrf::~reg_mrf()
 {
-   if(this->discretised_measures!=NULL)
+   if(this->discretised_measures!=nullptr)
       free(this->discretised_measures);
-   this->discretised_measures=NULL;
+   this->discretised_measures=nullptr;
 
-   if(this->orderedList!=NULL)
+   if(this->orderedList!=nullptr)
       free(this->orderedList);
-   this->orderedList=NULL;
+   this->orderedList=nullptr;
 
-   if(this->parentsList!=NULL)
+   if(this->parentsList!=nullptr)
       free(this->parentsList);
-   this->parentsList=NULL;
+   this->parentsList=nullptr;
 
-   if(this->edgeWeight!=NULL)
+   if(this->edgeWeight!=nullptr)
       free(this->edgeWeight);
-   this->edgeWeight=NULL;
+   this->edgeWeight=nullptr;
 
-   if(this->regularised_cost!=NULL)
+   if(this->regularised_cost!=nullptr)
       free(this->regularised_cost);
-   this->regularised_cost=NULL;
+   this->regularised_cost=nullptr;
 
-   if(this->optimal_label_index!=NULL)
+   if(this->optimal_label_index!=nullptr)
       free(this->optimal_label_index);
-   this->optimal_label_index=NULL;
+   this->optimal_label_index=nullptr;
 
    for(int i=0; i<this->image_dim; ++i){
-      if(this->discrete_values_mm[i]!=NULL)
+      if(this->discrete_values_mm[i]!=nullptr)
          free(this->discrete_values_mm[i]);
-      this->discrete_values_mm[i]=NULL;
+      this->discrete_values_mm[i]=nullptr;
    }
-   if(this->discrete_values_mm!=NULL)
+   if(this->discrete_values_mm!=nullptr)
       free(this->discrete_values_mm);
-   this->discrete_values_mm=NULL;
+   this->discrete_values_mm=nullptr;
 
-   if(this->input_transformation!=NULL)
+   if(this->input_transformation!=nullptr)
       nifti_image_free(this->input_transformation);
-   this->input_transformation=NULL;
+   this->input_transformation=nullptr;
 }
 /*****************************************************/
 void reg_mrf::Initialise()
@@ -171,18 +169,15 @@ void reg_mrf::Initialise()
    for(int i =0;i<edge_number;i++) {
       index_neighbours[i]=-1;
    }
-   int num_vertices = this->controlPointImage->nx *
-               this->controlPointImage->ny * this->controlPointImage->nz;
-   int num_neighbours=this->controlPointImage->nz > 1 ? 6 : 4;
+   const size_t num_vertices = NiftiImage::calcVoxelNumber(this->controlPointImage, 3);
+   const int num_neighbours=this->controlPointImage->nz > 1 ? 6 : 4;
 
    this->GetGraph(edgeWeightMatrix, index_neighbours);
    this->GetPrimsMST(edgeWeightMatrix, index_neighbours, num_vertices, num_neighbours, true);
    free(edgeWeightMatrix);
    free(index_neighbours);
    this->initialised = true;
-#ifndef NDEBUG
-   reg_print_msg_debug("reg_mrf::Initilisation done.");
-#endif
+   NR_FUNC_CALLED();
 }
 /*****************************************************/
 float* reg_mrf::GetDiscretisedMeasurePtr()
@@ -257,7 +252,7 @@ void reg_mrf::GetDiscretisedMeasure()
    //
    if (myfile.is_open()) {
        // ok, proceed with output
-       std::cout<<"OK - file opened"<<std::endl;
+       NR_COUT<<"OK - file opened"<<std::endl;
        for(int i=0;i<32388174;i++){
            myfile.read(buffer, sizeof(float));
            this->discretised_measures[i]=atof(buffer);
@@ -277,12 +272,10 @@ for(int i=0;i<32388174;i++){
 }
 */
 //DEBUG
- #ifndef NDEBUG
-   reg_print_msg_debug("reg_mrf::GetDiscretisedMeasure done");
-#endif
+   NR_FUNC_CALLED();
 }
 /*****************************************************/
-void reg_mrf::getOptimalLabel()
+void reg_mrf::GetOptimalLabel()
 {
    for(size_t node=0; node<this->node_number; ++node) {
       this->optimal_label_index[node]=
@@ -316,9 +309,7 @@ void reg_mrf::UpdateNodePositions()
          }
       }
    }
-#ifndef NDEBUG
-  reg_print_msg_debug("reg_mrf::Optimise done");
-#endif
+   NR_FUNC_CALLED();
 }
 /*****************************************************/
 void reg_mrf::Run()
@@ -335,14 +326,14 @@ void reg_mrf::Run()
        this->GetRegularisation();
        // Extract the best label
        //memcpy(this->regularised_cost, this->discretised_measures, this->node_number*this->label_nD_num*sizeof(float));
-       this->getOptimalLabel();
+       this->GetOptimalLabel();
        // Update the control point positions
        this->UpdateNodePositions();
    //}
 }
 /*****************************************************/
 /*****************************************************/
-template <class DTYPE>
+template <class DataType>
 void GetGraph_core3D(nifti_image* controlPointGridImage,
                      float* edgeWeightMatrix,
                      int* index_neighbours,
@@ -360,14 +351,13 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
       image_mm2vox = &refImage->sto_ijk;
    mat44 grid2img_vox = reg_mat44_mul(image_mm2vox, grid_vox2mm);
 
-   size_t node_number = (size_t)controlPointGridImage->nx *
-         controlPointGridImage->ny * controlPointGridImage->nz;
+   const size_t node_number = NiftiImage::calcVoxelNumber(controlPointGridImage, 3);
 
    // Compute the block size
    int blockSize[3]={
-      (int)reg_ceil(controlPointGridImage->dx / refImage->dx),
-      (int)reg_ceil(controlPointGridImage->dy / refImage->dy),
-      (int)reg_ceil(controlPointGridImage->dz / refImage->dz),
+      Ceil(controlPointGridImage->dx / refImage->dx),
+      Ceil(controlPointGridImage->dy / refImage->dy),
+      Ceil(controlPointGridImage->dz / refImage->dz),
    };
    int voxelBlockNumber = blockSize[0] * blockSize[1] * blockSize[2] * refImage->nt;
    // Allocate some static memory
@@ -376,7 +366,7 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
    float SADNeighbourValue = 0;
 
    // Pointers to the input image
-   DTYPE *refImgPtr = static_cast<DTYPE *>(refImage->data);
+   DataType *refImgPtr = static_cast<DataType *>(refImage->data);
 
    // Loop over all control points
    for(cpz=0; cpz<controlPointGridImage->nz; ++cpz){
@@ -388,9 +378,9 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
             gridVox[0] = cpx;
             // Compute the corresponding image voxel position
             reg_mat44_mul(&grid2img_vox, gridVox, imageVox);
-            imageVox[0]=reg_round(imageVox[0]);
-            imageVox[1]=reg_round(imageVox[1]);
-            imageVox[2]=reg_round(imageVox[2]);
+            imageVox[0]=Round(imageVox[0]);
+            imageVox[1]=Round(imageVox[1]);
+            imageVox[2]=Round(imageVox[2]);
             //DEBUG
             //imageVox[0]=gridVox[0]*controlPointGridImage->dx / refImage->dx;
             //imageVox[1]=gridVox[1]*controlPointGridImage->dy / refImage->dy;
@@ -417,7 +407,7 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
                         }
                      } else {
                         for(t=0; t<refImage->nt; ++t){
-                           refBlockValue[blockIndex] = 0.0;
+                           refBlockValue[blockIndex] = 0;
                            blockIndex++;
                         }
                      }
@@ -446,9 +436,9 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
                   //DEBUG
                   // Compute the corresponding image voxel position
                   reg_mat44_mul(&grid2img_vox, gridVox, imageVox);
-                  imageVox[0]=reg_round(imageVox[0]);
-                  imageVox[1]=reg_round(imageVox[1]);
-                  imageVox[2]=reg_round(imageVox[2]);
+                  imageVox[0]=Round(imageVox[0]);
+                  imageVox[1]=Round(imageVox[1]);
+                  imageVox[2]=Round(imageVox[2]);
                   //DEBUG
                   //imageVox[0]=gridVox[0]*controlPointGridImage->dx / refImage->dx;
                   //imageVox[1]=gridVox[1]*controlPointGridImage->dy / refImage->dy;
@@ -477,7 +467,7 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
                                  }
                               }else {
                                  for(t=0; t<refImage->nt; ++t){
-                                    neighbourBlockValue[blockIndex] = 0.0;
+                                    neighbourBlockValue[blockIndex] = 0;
                                     blockIndex++;
                                  } //t
                               }
@@ -521,7 +511,7 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
 
                      edgeWeightMatrix[cpx+cpy*controlPointGridImage->nx+
                            cpz*controlPointGridImage->nx*controlPointGridImage->ny+
-                           ngh_index*node_number]=0.0;
+                           ngh_index*node_number]=0;
                      //DEBUG
                      //index_neighbours[cpx+cpy*m1+
                      //        cpz*m1*n1+
@@ -530,7 +520,7 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
                      //        (cpz+dz[ngh_index])*m1*n1;
                      //edgeWeightMatrix[cpx+cpy*m1+
                      //        cpz*m1*n1+
-                     //        ngh_index*num_vertices]=0.0;
+                     //        ngh_index*num_vertices]=0;
                      //DEBUG
                   }
                }
@@ -561,16 +551,14 @@ void GetGraph_core3D(nifti_image* controlPointGridImage,
    free(refBlockValue);
 }
 /* *************************************************************** */
-template <class DTYPE>
+template <class DataType>
 void GetGraph_core2D(nifti_image* controlPointGridImage,
                      float* edgeWeightMatrix,
                      int* index_neighbours,
                      nifti_image *refImage,
                      int *mask)
 {
-   reg_print_fct_warn("GetGraph_core2D");
-   reg_print_msg_warn("No yet implemented");
-   reg_exit();
+   NR_ERROR("Not yet implemented");
 }
 /* *************************************************************** */
 void reg_mrf::GetGraph(float *edgeWeightMatrix, int *index_neighbours)
@@ -597,9 +585,7 @@ void reg_mrf::GetGraph(float *edgeWeightMatrix, int *index_neighbours)
                 );
          break;
       default:
-         reg_print_fct_error("reg_mrf::GetGraph");
-         reg_print_msg_error("Unsupported datatype");
-         reg_exit();
+         NR_FATAL_ERROR("Unsupported datatype");
       }
    } else {
       switch(this->referenceImage->datatype)
@@ -623,9 +609,7 @@ void reg_mrf::GetGraph(float *edgeWeightMatrix, int *index_neighbours)
                 );
          break;
       default:
-         reg_print_fct_error("reg_mrf::GetGraph");
-         reg_print_msg_error("Unsupported datatype");
-         reg_exit();
+         NR_FATAL_ERROR("Unsupported datatype");
       }
    }
 }
@@ -636,16 +620,15 @@ void reg_mrf::GetGraph(float *edgeWeightMatrix, int *index_neighbours)
 void reg_mrf::GetPrimsMST(float *edgeWeightMatrix,
                           int *index_neighbours, int num_vertices, int num_neighbours,bool norm)
 {
-   //int num_vertices = this->controlPointImage->nx *
-   //      this->controlPointImage->ny * this->controlPointImage->nz;
+   //size_t num_vertices = NiftiImage::calcVoxelNumber(controlPointGridImage, 3);
 
    //DEBUG
    //int blockSize[3]={
-   //    (int)reg_ceil(controlPointImage->dx / referenceImage->dx),
-   //    (int)reg_ceil(controlPointImage->dy / referenceImage->dy),
-   //    (int)reg_ceil(controlPointImage->dz / referenceImage->dz),
+   //    Ceil(controlPointImage->dx / referenceImage->dx),
+   //    Ceil(controlPointImage->dy / referenceImage->dy),
+   //    Ceil(controlPointImage->dz / referenceImage->dz),
    //};
-   //int sz=referenceImage->nx * referenceImage->ny * referenceImage->nz;
+   //size_t sz=NiftiImage::calcVoxelNumber(referenceImage, 3);
    //int m=referenceImage->nx;
    //int n=referenceImage->ny;
    //int o=referenceImage->nz;
@@ -712,7 +695,6 @@ void reg_mrf::GetPrimsMST(float *edgeWeightMatrix,
    }
    //generate list of nodes ordered by tree depth
    std::sort(treeLevel,treeLevel+num_vertices);
-   //printf("max tree depth: %d, mincost: %f\n",treeLevel[num_vertices-1].first,mincost);
    for(int i=0;i<num_vertices;i++){
       orderedList[i]=treeLevel[i].second;
    }
@@ -740,7 +722,7 @@ void reg_mrf::GetRegularisation()
    for(size_t i=0;i<this->node_number*this->label_nD_num;i++){
       //matrix = discretisedValue (first dimension displacement label, second dim. control point)
       this->regularised_cost[i]=this->discretised_measures[i];
-      message[i]=0.0;
+      message[i]=0;
    }
 
    for(int i=0;i<this->label_nD_num;i++){

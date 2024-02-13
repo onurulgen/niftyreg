@@ -1,10 +1,4 @@
-#ifndef _REG_MATHS_CPP
-#define _REG_MATHS_CPP
-
-#include "_reg_maths.h"
-//STD
-#include <map>
-#include <vector>
+#include "_reg_tools.h"
 
 #define mat(i,j,dim) mat[i*dim+j]
 
@@ -26,11 +20,7 @@ void reg_LUdecomposition(T *mat,
             if ((temp = fabs(mat(i, j, dim)))>big)
                 big = temp;
         if (big == 0.f)
-        {
-            reg_print_fct_error("reg_LUdecomposition");
-            reg_print_msg_error("Singular matrix");
-            reg_exit();
-        }
+            NR_FATAL_ERROR("Singular matrix");
         vv[i] = 1.0 / big;
     }
     for (j = 0; j < dim; ++j)
@@ -84,7 +74,7 @@ void reg_matrixInvertMultiply(T *mat,
                               T *vec)
 {
     // Perform the LU decomposition if necessary
-    if (index == NULL)
+    if (index == nullptr)
         reg_LUdecomposition(mat, dim, index);
 
     int ii = 0;
@@ -123,16 +113,11 @@ void reg_matrixMultiply(T *mat1,
 {
     // First check that the dimension are appropriate
     if (dim1[1] != dim2[0])
-    {
-        char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%zu %zu] [%zu %zu]",
-            dim1[0], dim1[1], dim2[0], dim2[1]);
-        reg_print_fct_error("reg_matrixMultiply");
-        reg_print_msg_error(text);
-        reg_exit();
-    }
+        NR_FATAL_ERROR("Matrices can not be multiplied due to their size: [" + std::to_string(dim1[0]) + " " +
+                       std::to_string(dim1[1]) + "] [" + std::to_string(dim2[0]) + " " + std::to_string(dim2[1]) + "]");
     size_t resDim[2] = {dim1[0], dim2[1]};
     // Allocate the result matrix
-    if (res != NULL)
+    if (res != nullptr)
         free(res);
     res = (T *)calloc(resDim[0] * resDim[1], sizeof(T));
     // Multiply both matrices
@@ -140,7 +125,7 @@ void reg_matrixMultiply(T *mat1,
     {
         for (size_t i = 0; i < resDim[0]; ++i)
         {
-            double sum = 0.0;
+            double sum = 0;
             for (size_t k = 0; k < dim1[1]; ++k)
             {
                 sum += mat1[k * dim1[0] + i] * mat2[j * dim2[0] + k];
@@ -236,13 +221,9 @@ template<class T>
 T** reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t mat2X, size_t mat2Y, bool transposeMat2) {
     if (transposeMat2 == false) {
         // First check that the dimension are appropriate
-        if (mat1Y != mat2X) {
-            char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%zu %zu] [%zu %zu]",
-                mat1X, mat1Y, mat2X, mat2Y);
-            reg_print_fct_error("reg_matrix2DMultiply");
-            reg_print_msg_error(text);
-            reg_exit();
-        }
+        if (mat1Y != mat2X)
+            NR_FATAL_ERROR("Matrices can not be multiplied due to their size: [" + std::to_string(mat1X) + " " +
+                           std::to_string(mat1Y) + "] [" + std::to_string(mat2X) + " " + std::to_string(mat2Y) + "]");
 
         size_t nbElement = mat1Y;
         double resTemp = 0;
@@ -262,13 +243,10 @@ T** reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t 
     }
     else {
         // First check that the dimension are appropriate
-        if (mat1Y != mat2Y) {
-            char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%zu %zu] [%zu %zu]",
-                mat1X, mat1Y, mat2Y, mat2X);
-            reg_print_fct_error("reg_matrix2DMultiply");
-            reg_print_msg_error(text);
-            reg_exit();
-        }
+        if (mat1Y != mat2Y)
+            NR_FATAL_ERROR("Matrices can not be multiplied due to their size: [" + std::to_string(mat1X) + " " +
+                           std::to_string(mat1Y) + "] [" + std::to_string(mat2Y) + " " + std::to_string(mat2X) + "]");
+
         size_t nbElement = mat1Y;
         double resTemp = 0;
         T** res = reg_matrix2DAllocate<T>(mat1X,mat2X);
@@ -293,13 +271,10 @@ template<class T>
 void reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t mat2X, size_t mat2Y, T** resT, bool transposeMat2) {
     if (transposeMat2 == false) {
         // First check that the dimension are appropriate
-        if (mat1Y != mat2X) {
-            char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%zu %zu] [%zu %zu]",
-                mat1X, mat1Y, mat2X, mat2Y);
-            reg_print_fct_error("reg_matrix2DMultiply");
-            reg_print_msg_error(text);
-            reg_exit();
-        }
+        if (mat1Y != mat2X)
+            NR_FATAL_ERROR("Matrices can not be multiplied due to their size: [" + std::to_string(mat1X) + " " +
+                           std::to_string(mat1Y) + "] [" + std::to_string(mat2X) + " " + std::to_string(mat2Y) + "]");
+
         size_t nbElement = mat1Y;
         double resTemp;
 
@@ -315,13 +290,10 @@ void reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t
     }
     else {
         // First check that the dimension are appropriate
-        if (mat1Y != mat2Y) {
-            char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%zu %zu] [%zu %zu]",
-                mat1X, mat1Y, mat2Y, mat2X);
-            reg_print_fct_error("reg_matrix2DMultiply");
-            reg_print_msg_error(text);
-            reg_exit();
-        }
+        if (mat1Y != mat2Y)
+            NR_FATAL_ERROR("Matrices can not be multiplied due to their size: [" + std::to_string(mat1X) + " " +
+                           std::to_string(mat1Y) + "] [" + std::to_string(mat2Y) + " " + std::to_string(mat2X) + "]");
+
         size_t nbElement = mat1Y;
         double resTemp;
 
@@ -428,13 +400,13 @@ void reg_heapSort(float *array_tmp, int *index_tmp, int blockNum)
 }
 /* *************************************************************** */
 // Heap sort
-template<class DTYPE>
-void reg_heapSort(DTYPE *array_tmp, int blockNum)
+template<class DataType>
+void reg_heapSort(DataType *array_tmp, int blockNum)
 {
-    DTYPE *array = &array_tmp[-1];
+    DataType *array = &array_tmp[-1];
     int l = (blockNum >> 1) + 1;
     int ir = blockNum;
-    DTYPE val;
+    DataType val;
     for (;;)
     {
         if (l > 1)
@@ -718,7 +690,7 @@ void reg_mat33_diagonalize(mat33 const* A, mat33 * Q, mat33 * D)
     const int maxsteps = 24;  // certainly wont need that many.
     int k0, k1, k2;
     float o[3], m[3];
-    float q[4] = { 0.0, 0.0, 0.0, 1.0 };
+    float q[4] = { 0, 0, 0, 1 };
     float jr[4];
     float sqw, sqx, sqy, sqz;
     float tmp1, tmp2, mq;
@@ -777,12 +749,12 @@ void reg_mat33_diagonalize(mat33 const* A, mat33 * Q, mat33 * D)
         k0 = (m[0] > m[1] && m[0] > m[2]) ? 0 : (m[1] > m[2]) ? 1 : 2; // index of largest element of offdiag
         k1 = (k0 + 1) % 3;
         k2 = (k0 + 2) % 3;
-        if (o[k0] == 0.0)
+        if (o[k0] == 0)
         {
             break;                          // diagonal already
         }
         thet = (D->m[k2][k2] - D->m[k1][k1]) / (2.0*o[k0]);
-        sgn = (thet > 0.0) ? 1.0 : -1.0;
+        sgn = (thet > 0) ? 1 : -1;
         thet *= sgn;                      // make it positive
         t = sgn / (thet + ((thet < 1.E6) ? sqrt(thet*thet + 1.0) : thet)); // sign(T)/(|T|+sqrt(T^2+1))
         c = 1.0 / sqrt(t*t + 1.0);        //  c= 1/(t^2+1) , t=s/c
@@ -790,7 +762,7 @@ void reg_mat33_diagonalize(mat33 const* A, mat33 * Q, mat33 * D)
         {
             break;                          // no room for improvement - reached machine precision.
         }
-        jr[0] = jr[1] = jr[2] = jr[3] = 0.0;
+        jr[0] = jr[1] = jr[2] = jr[3] = 0;
         jr[k0] = sgn*sqrt((1.0 - c) / 2.0);    // using 1/2 angle identity sin(a/2) = sqrt((1-cos(a))/2)
         jr[k0] *= -1.0;                     // since our quat-to-matrix convention was for v*M instead of M*v
         jr[3] = sqrt(1.0f - jr[k0] * jr[k0]);
@@ -866,8 +838,8 @@ void reg_mat44_eye(mat44 *mat)
 /* *************************************************************** */
 float reg_mat44_norm_inf(mat44 const* mat)
 {
-    float maxval = 0.0;
-    float newval = 0.0;
+    float maxval = 0;
+    float newval = 0;
     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < 4; j++)
@@ -946,35 +918,33 @@ mat44 reg_mat44_mul(mat44 const* A, double scalar)
     return out;
 }
 /* *************************************************************** */
-void reg_mat44_disp(mat44 *mat, char * title){
-    printf("%s:\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n", title,
-        mat->m[0][0], mat->m[0][1], mat->m[0][2], mat->m[0][3],
-        mat->m[1][0], mat->m[1][1], mat->m[1][2], mat->m[1][3],
-        mat->m[2][0], mat->m[2][1], mat->m[2][2], mat->m[2][3],
-        mat->m[3][0], mat->m[3][1], mat->m[3][2], mat->m[3][3]);
+void reg_mat44_disp(const mat44& mat, const std::string& title) {
+    NR_COUT << title << ":\n"
+            << mat.m[0][0] << "\t" << mat.m[0][1] << "\t" << mat.m[0][2] << "\t" << mat.m[0][3] << "\n"
+            << mat.m[1][0] << "\t" << mat.m[1][1] << "\t" << mat.m[1][2] << "\t" << mat.m[1][3] << "\n"
+            << mat.m[2][0] << "\t" << mat.m[2][1] << "\t" << mat.m[2][2] << "\t" << mat.m[2][3] << "\n"
+            << mat.m[3][0] << "\t" << mat.m[3][1] << "\t" << mat.m[3][2] << "\t" << mat.m[3][3] << std::endl;
 }
-
 /* *************************************************************** */
-/* *************************************************************** */
-void reg_mat33_disp(mat33 *mat, char * title){
-    printf("%s:\n%g\t%g\t%g\n%g\t%g\t%g\n%g\t%g\t%g\n", title,
-        mat->m[0][0], mat->m[0][1], mat->m[0][2],
-        mat->m[1][0], mat->m[1][1], mat->m[1][2],
-        mat->m[2][0], mat->m[2][1], mat->m[2][2]);
+void reg_mat33_disp(const mat33& mat, const std::string& title){
+    NR_COUT << title << ":\n"
+            << mat.m[0][0] << "\t" << mat.m[0][1] << "\t" << mat.m[0][2] << "\n"
+            << mat.m[1][0] << "\t" << mat.m[1][1] << "\t" << mat.m[1][2] << "\n"
+            << mat.m[2][0] << "\t" << mat.m[2][1] << "\t" << mat.m[2][2] << std::endl;
 }
 /* *************************************************************** */
 //is it square distance or just distance?
 // Helper function: Get the square of the Euclidean distance
 double get_square_distance3D(float * first_point3D, float * second_point3D) {
-    return sqrt(reg_pow2(first_point3D[0] - second_point3D[0]) +
-          reg_pow2(first_point3D[1] - second_point3D[1]) +
-          reg_pow2(first_point3D[2] - second_point3D[2]));
+    return sqrt(Square(first_point3D[0] - second_point3D[0]) +
+          Square(first_point3D[1] - second_point3D[1]) +
+          Square(first_point3D[2] - second_point3D[2]));
 }
 /* *************************************************************** */
 //is it square distance or just distance?
 double get_square_distance2D(float * first_point2D, float * second_point2D) {
-    return sqrt(reg_pow2(first_point2D[0] - second_point2D[0]) +
-          reg_pow2(first_point2D[1] - second_point2D[1]));
+    return sqrt(Square(first_point2D[0] - second_point2D[0]) +
+          Square(first_point2D[1] - second_point2D[1]));
 }
 /* *************************************************************** */
 // Calculate pythagorean distance
@@ -986,8 +956,7 @@ T pythag(T a, T b)
     absb = fabs(b);
 
     if (absa > absb)
-        return (T)(absa * sqrt(1.0f + SQR(absb / absa)));
+        return (T)(absa * sqrt(1.0f + Square(absb / absa)));
     else
-        return (absb == 0.0f ? 0.0f : (T)(absb * sqrt(1.0f + SQR(absa / absb))));
+        return (absb == 0.0f ? 0.0f : (T)(absb * sqrt(1.0f + Square(absa / absb))));
 }
-#endif // _REG_MATHS_CPP

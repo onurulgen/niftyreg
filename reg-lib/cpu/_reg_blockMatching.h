@@ -12,8 +12,7 @@
  *
  */
 
-#ifndef __REG_BLOCKMATCHING_H__
-#define __REG_BLOCKMATCHING_H__
+#pragma once
 
 #include "_reg_maths.h"
 #include <vector>
@@ -35,11 +34,11 @@ struct _reg_blockMatchingParam
 {
    int totalBlockNumber;
    int *totalBlock;
-   unsigned int blockNumber[3];
+   unsigned blockNumber[3];
    //Number of block we keep for LTS
    int percent_to_keep;
 
-   unsigned int dim;
+   unsigned dim;
    float *referencePosition;
    float *warpedPosition;
 
@@ -70,12 +69,10 @@ struct _reg_blockMatchingParam
         stepSize(0)
    {}
 
-   ~_reg_blockMatchingParam()
-   {
-      if (referencePosition) free(referencePosition);
-      if (warpedPosition) free(warpedPosition);
-      if (totalBlock) free(totalBlock);
-   }
+   // Perform a deep copy
+   _reg_blockMatchingParam(_reg_blockMatchingParam *);
+
+   ~_reg_blockMatchingParam();
 };
 /* *************************************************************** */
 /** @brief This function initialise a _reg_blockMatchingParam structure
@@ -91,7 +88,6 @@ struct _reg_blockMatchingParam
  * image to consider for the registration
  * @param runningOnGPU Has to be set to true if the registration has to be performed on the GPU
  */
-extern "C++"
 void initialise_block_matching_method(nifti_image * referenceImage,
                                       _reg_blockMatchingParam *params,
                                       int percentToKeep_block,
@@ -107,7 +103,6 @@ void initialise_block_matching_method(nifti_image * referenceImage,
  * relevant information
  * @param mask Mask array where only voxel defined as active are considered
  */
-extern "C++"
 void block_matching_method(nifti_image * referenceImage,
                            nifti_image * warpedImage,
                            _reg_blockMatchingParam *params,
@@ -123,4 +118,3 @@ void block_matching_method(nifti_image * referenceImage,
 void optimize(_reg_blockMatchingParam *params,
               mat44 * transformation_matrix,
               bool affine = true);
-#endif

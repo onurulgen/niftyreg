@@ -12,8 +12,7 @@
  *
  */
 
-#ifndef _REG_MRF_H
-#define _REG_MRF_H
+#pragma once
 
 #include "_reg_measure.h"
 #include "_reg_localTrans_regul.h"
@@ -58,7 +57,7 @@ public:
    //
    void GetRegularisation();
    //
-   void getOptimalLabel();
+   void GetOptimalLabel();
    int* GetOptimalLabelPtr();
    //
    int* GetOrderedListPtr();
@@ -86,7 +85,7 @@ private:
    int image_dim; ///< Dimension of the reference image
    size_t node_number; ///< Number of nodes in the tree
 
-   float **discrete_values_mm; ///< All discretised values in millimeter
+   float **discrete_values_mm; ///< All discretised values in millimetre
 
    int* orderedList; ///< Ordered list of nodes from the root to the leaves
    int* parentsList; ///< List that gives parent's index for each node
@@ -103,24 +102,18 @@ private:
    bool initialised; ///< Variable to access if the object has been initialised
 };
 /********************************************************************************************************/
-extern "C++"
-template <class DTYPE>
+template <class DataType>
 void GetGraph_core3D(nifti_image* controlPointGridImage,
                      float* edgeWeightMatrix,
                      float* index_neighbours,
                      nifti_image *refImage,
                      int *mask);
-extern "C++"
-template <class DTYPE>
+template <class DataType>
 void GetGraph_core2D(nifti_image* controlPointGridImage,
                      float* edgeWeightMatrix,
                      float* index_neighbours,
                      nifti_image *refImage,
                      int *mask);
-
-extern "C++"
 void dt1sq(float *val,int* ind,int len,float offset,int k,int* v,float* z,float* f,int* ind1);
-extern "C++"
 void dt3x(float* r,int* indr,int rl,float dx,float dy,float dz);
 /********************************************************************************************************/
-#endif // _REG_MRF_H

@@ -10,9 +10,6 @@
  *
  */
 
-#ifndef _REG_AFFINETRANS_CPP
-#define _REG_AFFINETRANS_CPP
-
 #include "_reg_globalTrans.h"
 #include "_reg_maths.h"
 #include "_reg_maths_eigen.h"
@@ -25,7 +22,7 @@ void reg_affine_deformationField2D(mat44 *affineTransformation,
                                    bool composition,
                                    int *mask)
 {
-   size_t voxelNumber=deformationFieldImage->nx*deformationFieldImage->ny;
+   const size_t voxelNumber = NiftiImage::calcVoxelNumber(deformationFieldImage, 2);
    FieldTYPE *deformationFieldPtrX = static_cast<FieldTYPE *>(deformationFieldImage->data);
    FieldTYPE *deformationFieldPtrY = &deformationFieldPtrX[voxelNumber];
 
@@ -37,22 +34,18 @@ void reg_affine_deformationField2D(mat44 *affineTransformation,
    else referenceMatrix=&(deformationFieldImage->qto_xyz);
 
    mat44 transformationMatrix;
-   if(composition==true)
+   if(composition)
       transformationMatrix = *affineTransformation;
    else transformationMatrix = reg_mat44_mul(affineTransformation, referenceMatrix);
-
-#ifndef NDEBUG
-   reg_mat44_disp(&transformationMatrix, (char *)"[NiftyReg DEBUG] Global affine transformation");
-#endif
 
    double voxel[3]={0,0,0}, position[3]={0,0,0};
    int x=0, y=0;
    size_t index=0;
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(deformationFieldImage, transformationMatrix, affineTransformation, \
    deformationFieldPtrX, deformationFieldPtrY, mask, composition) \
-   private(voxel, position, x, y, index)
+   private(voxel, position, x, index)
 #endif
    for(y=0; y<deformationFieldImage->ny; y++)
    {
@@ -64,7 +57,7 @@ void reg_affine_deformationField2D(mat44 *affineTransformation,
          voxel[0]=(double)x;
          if(mask[index]>-1)
          {
-            if(composition==true)
+            if(composition)
             {
                voxel[0] = (double) deformationFieldPtrX[index];
                voxel[1] = (double) deformationFieldPtrY[index];
@@ -87,7 +80,7 @@ void reg_affine_deformationField3D(mat44 *affineTransformation,
                                    bool composition,
                                    int *mask)
 {
-   size_t voxelNumber=deformationFieldImage->nx*deformationFieldImage->ny*deformationFieldImage->nz;
+   const size_t voxelNumber=NiftiImage::calcVoxelNumber(deformationFieldImage, 3);
    FieldTYPE *deformationFieldPtrX = static_cast<FieldTYPE *>(deformationFieldImage->data);
    FieldTYPE *deformationFieldPtrY = &deformationFieldPtrX[voxelNumber];
    FieldTYPE *deformationFieldPtrZ = &deformationFieldPtrY[voxelNumber];
@@ -100,22 +93,18 @@ void reg_affine_deformationField3D(mat44 *affineTransformation,
    else referenceMatrix=&(deformationFieldImage->qto_xyz);
 
    mat44 transformationMatrix;
-   if(composition==true)
+   if(composition)
       transformationMatrix = *affineTransformation;
    else transformationMatrix = reg_mat44_mul(affineTransformation, referenceMatrix);
-
-#ifndef NDEBUG
-   reg_mat44_disp(&transformationMatrix, (char *)"[NiftyReg DEBUG] Global affine transformation");
-#endif
 
    double voxel[3]={0,0,0}, position[3]={0,0,0};
    int x=0, y=0, z=0;
    size_t index=0;
-#if defined (_OPENMP)
+#ifdef _OPENMP
 #pragma omp parallel for default(none) \
    shared(deformationFieldImage, transformationMatrix, affineTransformation, \
    deformationFieldPtrX, deformationFieldPtrY, deformationFieldPtrZ, mask, composition) \
-   private(voxel, position, x, y, z, index)
+   private(voxel, position, x, y, index)
 #endif
    for(z=0; z<deformationFieldImage->nz; z++)
    {
@@ -129,7 +118,7 @@ void reg_affine_deformationField3D(mat44 *affineTransformation,
             voxel[0]=(double) x;
             if(mask[index]>-1)
             {
-               if(composition==true)
+               if(composition)
                {
                   voxel[0]= (double) deformationFieldPtrX[index];
                   voxel[1]= (double) deformationFieldPtrY[index];
@@ -154,12 +143,9 @@ void reg_affine_getDeformationField(mat44 *affineTransformation,
                                     int *mask)
 {
    int *tempMask=mask;
-   if(mask==NULL)
+   if(mask==nullptr)
    {
-      tempMask=(int *)calloc(deformationField->nx*
-                             deformationField->ny*
-                             deformationField->nz,
-                             sizeof(int));
+      tempMask = (int *)calloc(NiftiImage::calcVoxelNumber(deformationField, 3), sizeof(int));
    }
    if(deformationField->nz==1)
    {
@@ -172,9 +158,7 @@ void reg_affine_getDeformationField(mat44 *affineTransformation,
          reg_affine_deformationField2D<double>(affineTransformation, deformationField, compose, tempMask);
          break;
       default:
-         reg_print_fct_error("reg_affine_getDeformationField");
-         reg_print_msg_error("The deformation field data type is not supported");
-         reg_exit();
+         NR_FATAL_ERROR("The deformation field data type is not supported");
       }
    }
    else
@@ -188,23 +172,21 @@ void reg_affine_getDeformationField(mat44 *affineTransformation,
          reg_affine_deformationField3D<double>(affineTransformation, deformationField, compose, tempMask);
          break;
       default:
-         reg_print_fct_error("reg_affine_getDeformationField");
-         reg_print_msg_error("The deformation field data type is not supported");
-         reg_exit();
+         NR_FATAL_ERROR("The deformation field data type is not supported");
       }
    }
-   if(mask==NULL)
+   if(mask==nullptr)
       free(tempMask);
 }
 /* *************************************************************** */
 void estimate_rigid_transformation2D(float** points1, float** points2, int num_points, mat44 * transformation)
 {
 
-   double centroid_reference[2] = { 0.0 };
-   double centroid_warped[2] = { 0.0 };
+   double centroid_reference[2] = { 0 };
+   double centroid_warped[2] = { 0 };
 
-   float centroid_referenceFloat[2] = { 0.0 };
-   float centroid_warpedFloat[2] = { 0.0 };
+   float centroid_referenceFloat[2] = { 0 };
+   float centroid_warpedFloat[2] = { 0 };
 
    for (int j = 0; j < num_points; ++j) {
       centroid_reference[0] += (double) points1[j][0];
@@ -252,7 +234,7 @@ void estimate_rigid_transformation2D(float** points1, float** points2, int num_p
    float det = reg_matrix2DDet<float>(r, 2, 2);
 
    // Take care of possible reflection
-   if (det < 0.0) {
+   if (det < 0) {
       v[0][1] = -v[0][1];
       v[1][1] = -v[1][1];
       reg_matrix2DMultiply<float>(v, 2, 2, ut, 2, 2, r, false);
@@ -301,10 +283,10 @@ void estimate_rigid_transformation2D(float** points1, float** points2, int num_p
 void estimate_rigid_transformation2D(std::vector<_reg_sorted_point2D> &points, mat44 * transformation)
 {
 
-   unsigned int num_points = points.size();
+   unsigned num_points = points.size();
    float** points1 = reg_matrix2DAllocate<float>(num_points, 2);
    float** points2 = reg_matrix2DAllocate<float>(num_points, 2);
-   for (unsigned int i = 0; i < num_points; i++) {
+   for (unsigned i = 0; i < num_points; i++) {
       points1[i][0] = points[i].reference[0];
       points1[i][1] = points[i].reference[1];
       points2[i][0] = points[i].warped[0];
@@ -319,11 +301,11 @@ void estimate_rigid_transformation2D(std::vector<_reg_sorted_point2D> &points, m
 void estimate_rigid_transformation3D(float** points1, float** points2, int num_points, mat44 * transformation)
 {
 
-   double centroid_reference[3] = { 0.0 };
-   double centroid_warped[3] = { 0.0 };
+   double centroid_reference[3] = { 0 };
+   double centroid_warped[3] = { 0 };
 
-   float centroid_referenceFloat[3] = { 0.0 };
-   float centroid_warpedFloat[3] = { 0.0 };
+   float centroid_referenceFloat[3] = { 0 };
+   float centroid_warpedFloat[3] = { 0 };
 
 
    for (int j = 0; j < num_points; ++j)
@@ -383,7 +365,7 @@ void estimate_rigid_transformation3D(float** points1, float** points2, int num_p
    float det = reg_matrix2DDet<float>(r, 3, 3);
 
    // Take care of possible reflection
-   if (det < 0.0) {
+   if (det < 0) {
       v[0][2] = -v[0][2];
       v[1][2] = -v[1][2];
       v[2][2] = -v[2][2];
@@ -435,10 +417,10 @@ void estimate_rigid_transformation3D(float** points1, float** points2, int num_p
 /* *************************************************************** */
 void estimate_rigid_transformation3D(std::vector<_reg_sorted_point3D> &points, mat44 * transformation)
 {
-   unsigned int num_points = points.size();
+   unsigned num_points = points.size();
    float** points1 = reg_matrix2DAllocate<float>(num_points, 3);
    float** points2 = reg_matrix2DAllocate<float>(num_points, 3);
-   for (unsigned int i = 0; i < num_points; i++) {
+   for (unsigned i = 0; i < num_points; i++) {
       points1[i][0] = points[i].reference[0];
       points1[i][1] = points[i].reference[1];
       points1[i][2] = points[i].reference[2];
@@ -542,10 +524,10 @@ void estimate_affine_transformation2D(float** points1, float** points2, int num_
 /* *************************************************************** */
 void estimate_affine_transformation2D(std::vector<_reg_sorted_point2D> &points, mat44 * transformation)
 {
-   unsigned int num_points = points.size();
+   unsigned num_points = points.size();
    float** points1 = reg_matrix2DAllocate<float>(num_points, 2);
    float** points2 = reg_matrix2DAllocate<float>(num_points, 2);
-   for (unsigned int i = 0; i < num_points; i++) {
+   for (unsigned i = 0; i < num_points; i++) {
       points1[i][0] = points[i].reference[0];
       points1[i][1] = points[i].reference[1];
       points2[i][0] = points[i].warped[0];
@@ -666,10 +648,10 @@ void estimate_affine_transformation3D(float** points1, float** points2, int num_
 // estimate an affine transformation using least square
 void estimate_affine_transformation3D(std::vector<_reg_sorted_point3D> &points, mat44 * transformation)
 {
-   unsigned int num_points = points.size();
+   unsigned num_points = points.size();
    float** points1 = reg_matrix2DAllocate<float>(num_points, 3);
    float** points2 = reg_matrix2DAllocate<float>(num_points, 3);
-   for (unsigned int i = 0; i < num_points; i++) {
+   for (unsigned i = 0; i < num_points; i++) {
       points1[i][0] = points[i].reference[0];
       points1[i][1] = points[i].reference[1];
       points1[i][2] = points[i].reference[2];
@@ -685,7 +667,7 @@ void estimate_affine_transformation3D(std::vector<_reg_sorted_point3D> &points, 
 /* *************************************************************** */
 ///LTS 2D
 void optimize_2D(float* referencePosition, float* warpedPosition,
-                 unsigned int activeBlockNumber, int percent_to_keep, int max_iter, double tol,
+                 unsigned activeBlockNumber, int percent_to_keep, int max_iter, double tol,
                  mat44 * final, bool affine) {
 
    // Set the current transformation to identity
@@ -697,14 +679,14 @@ void optimize_2D(float* referencePosition, float* warpedPosition,
    std::multimap<double, _reg_sorted_point2D> queue;
    std::vector<_reg_sorted_point2D> top_points;
 
-   double distance = 0.0;
+   double distance = 0;
    double lastDistance = std::numeric_limits<double>::max();
    unsigned long i;
 
    // The initial vector with all the input points
    for (unsigned j = 0; j < num_equations; j += 2)
    {
-      top_points.push_back(_reg_sorted_point2D(&referencePosition[j], &warpedPosition[j], 0.0));
+      top_points.push_back(_reg_sorted_point2D(&referencePosition[j], &warpedPosition[j], 0));
    }
    if (affine) {
       estimate_affine_transformation2D(top_points, final);
@@ -734,7 +716,7 @@ void optimize_2D(float* referencePosition, float* warpedPosition,
                                                              _reg_sorted_point2D(&referencePosition[j], &warpedPosition[j], distance)));
       }
 
-      distance = 0.0;
+      distance = 0;
       i = 0;
       top_points.clear();
 
@@ -768,7 +750,7 @@ void optimize_2D(float* referencePosition, float* warpedPosition,
 /* *************************************************************** */
 ///LTS 3D
 void optimize_3D(float *referencePosition, float *warpedPosition,
-                 unsigned int activeBlockNumber, int percent_to_keep, int max_iter, double tol,
+                 unsigned activeBlockNumber, int percent_to_keep, int max_iter, double tol,
                  mat44 *final, bool affine) {
 
    // Set the current transformation to identity
@@ -779,7 +761,7 @@ void optimize_3D(float *referencePosition, float *warpedPosition,
    // Keep a sorted list of the distance measure
    std::multimap<double, _reg_sorted_point3D> queue;
    std::vector<_reg_sorted_point3D> top_points;
-   double distance = 0.0;
+   double distance = 0;
    double lastDistance = std::numeric_limits<double>::max();
    unsigned long i;
 
@@ -787,7 +769,7 @@ void optimize_3D(float *referencePosition, float *warpedPosition,
    for (unsigned j = 0; j < num_equations; j+=3) {
       top_points.push_back(_reg_sorted_point3D(&referencePosition[j],
                                                &warpedPosition[j],
-                                               0.0));
+                                               0));
    }
    if (affine) {
       estimate_affine_transformation3D(top_points, final);
@@ -817,7 +799,7 @@ void optimize_3D(float *referencePosition, float *warpedPosition,
                                                                distance)));
       }
 
-      distance = 0.0;
+      distance = 0;
       i = 0;
       top_points.clear();
       for (std::multimap<double, _reg_sorted_point3D>::iterator it = queue.begin();it != queue.end(); ++it, ++i)
@@ -844,4 +826,3 @@ void optimize_3D(float *referencePosition, float *warpedPosition,
    delete [] newWarpedPosition;
 }
 /* *************************************************************** */
-#endif
