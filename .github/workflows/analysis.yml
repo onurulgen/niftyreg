@@ -58,4 +58,4 @@ jobs:
             # Since cppcheck does not support OpenCL and CUDA, we need to check these files separately
             find $(pwd)/reg-lib/cl/. -name "*.cl" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> $analysis_file; done
             find $(pwd)/reg-lib/cuda/. -name "*.cu" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> $analysis_file; done
-            python3 ${{ github.workspace }}/.github/code_analysis.py -cc $analysis_file -o ${{ github.event_name == 'push' }} -fk false
+            python3 .github/code_analysis.py -cc $analysis_file -o ${{ github.event_name == 'push' }} -fk false
