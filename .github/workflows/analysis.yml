@@ -13,7 +13,7 @@ jobs:
           cd cppcheck
           git checkout 2.13.x
           # Disable color output of cppcheck
-          sed -i 's/ *bool *gDisableColors *= *false;/bool gDisableColors = true;/' lib/color.cpp
+          # sed -i 's/ *bool *gDisableColors *= *false;/bool gDisableColors = true;/' lib/color.cpp
           sudo make -j4 MATCHCOMPILER=yes FILESDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" install
 
       - name: Install Python dependencies
@@ -51,7 +51,6 @@ jobs:
             PR_NUMBER: ${{ github.event.pull_request.number }}
             REPO: ${{ github.repository }}
             REPORT_PR_CHANGES_ONLY: false
-            IS_PUSH: ${{ github.event_name == 'push' }}
         run: |
             analysis_file="analysis.txt"
             cppcheck_params="--enable=warning --check-level=exhaustive --suppress=internalError --suppress=internalAstError"
@@ -59,4 +58,4 @@ jobs:
             # Since cppcheck does not support OpenCL and CUDA, we need to check these files separately
             find $(pwd)/reg-lib/cl/. -name "*.cl" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> $analysis_file; done
             find $(pwd)/reg-lib/cuda/. -name "*.cu" -print0 | while IFS= read -r -d '' file; do cppcheck "$file" $cppcheck_params --language=c++ 2>> $analysis_file; done
-            python3 ${{ github.workspace }}/.github/code_analysis.py -cc $analysis_file -o $IS_PUSH -fk false
+            python3 ${{ github.workspace }}/.github/code_analysis.py -cc $analysis_file -o ${{ github.event_name == 'push' }} -fk false

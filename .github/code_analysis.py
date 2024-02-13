@@ -592,5 +592,5 @@ if __name__ == "__main__":
     if not output_to_console_in:
         comment_body_in = prepare_comment_body(cppcheck_comment_in, cppcheck_issues_found_in)
         create_or_edit_comment(comment_body_in)
-    else:
-        sys.exit(cppcheck_issues_found_in)
+
+    sys.exit(cppcheck_issues_found_in)
